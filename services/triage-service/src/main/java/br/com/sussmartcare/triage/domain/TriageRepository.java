@@ -1,0 +1,1 @@
+package br.com.sussmartcare.triage.domain; import java.util.*; public interface TriageRepository { Triage save(Triage t); Optional<Triage> findById(UUID id); Optional<Triage> findByVisitId(UUID visitId); }

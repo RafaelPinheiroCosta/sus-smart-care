@@ -1,0 +1,207 @@
+{
+    "realm":  "sus-smart-care",
+    "enabled":  true,
+    "registrationAllowed":  false,
+    "roles":  {
+                  "realm":  [
+                                {
+                                    "name":  "PATIENT"
+                                },
+                                {
+                                    "name":  "REPRESENTATIVE"
+                                },
+                                {
+                                    "name":  "TRIAGE_NURSE"
+                                },
+                                {
+                                    "name":  "DOCTOR"
+                                },
+                                {
+                                    "name":  "OPERATOR"
+                                },
+                                {
+                                    "name":  "ADMIN"
+                                },
+                                {
+                                    "name":  "AMBULANCE_TEAM"
+                                },
+                                {
+                                    "name":  "DEVICE"
+                                }
+                            ]
+              },
+    "clients":  [
+                    {
+                        "clientId":  "sus-smart-care-postman",
+                        "publicClient":  true,
+                        "directAccessGrantsEnabled":  true,
+                        "redirectUris":  [
+                                             "*"
+                                         ]
+                    },
+                    {
+                        "clientId":  "device-client",
+                        "serviceAccountsEnabled":  true,
+                        "publicClient":  false,
+                        "secret":  "device-secret",
+                        "directAccessGrantsEnabled":  false
+                    }
+                ],
+    "users":  [
+                  {
+                      "username":  "demo.admin",
+                      "enabled":  true,
+                      "credentials":  [
+                                          {
+                                              "type":  "password",
+                                              "value":  "admin123",
+                                              "temporary":  false
+                                          }
+                                      ],
+                      "realmRoles":  [
+                                         "ADMIN"
+                                     ],
+                      "firstName":  "Administrador",
+                      "lastName":  "Demo",
+                      "email":  "demo.admin@sussmartcare.local",
+                      "emailVerified":  true,
+                      "requiredActions":  [
+
+                                          ]
+                  },
+                  {
+                      "username":  "demo.patient",
+                      "enabled":  true,
+                      "credentials":  [
+                                          {
+                                              "type":  "password",
+                                              "value":  "demo123",
+                                              "temporary":  false
+                                          }
+                                      ],
+                      "realmRoles":  [
+                                         "PATIENT"
+                                     ],
+                      "firstName":  "Paciente",
+                      "lastName":  "Demo",
+                      "email":  "demo.patient@sussmartcare.local",
+                      "emailVerified":  true,
+                      "requiredActions":  [
+
+                                          ]
+                  },
+                  {
+                      "username":  "demo.representative",
+                      "enabled":  true,
+                      "credentials":  [
+                                          {
+                                              "type":  "password",
+                                              "value":  "demo123",
+                                              "temporary":  false
+                                          }
+                                      ],
+                      "realmRoles":  [
+                                         "REPRESENTATIVE"
+                                     ],
+                      "firstName":  "Representante",
+                      "lastName":  "Demo",
+                      "email":  "demo.representative@sussmartcare.local",
+                      "emailVerified":  true,
+                      "requiredActions":  [
+
+                                          ]
+                  },
+                  {
+                      "username":  "demo.triage",
+                      "enabled":  true,
+                      "credentials":  [
+                                          {
+                                              "type":  "password",
+                                              "value":  "demo123",
+                                              "temporary":  false
+                                          }
+                                      ],
+                      "realmRoles":  [
+                                         "TRIAGE_NURSE"
+                                     ],
+                      "firstName":  "Triagem",
+                      "lastName":  "Demo",
+                      "email":  "demo.triage@sussmartcare.local",
+                      "emailVerified":  true,
+                      "requiredActions":  [
+
+                                          ]
+                  },
+                  {
+                      "username":  "demo.doctor",
+                      "enabled":  true,
+                      "credentials":  [
+                                          {
+                                              "type":  "password",
+                                              "value":  "demo123",
+                                              "temporary":  false
+                                          }
+                                      ],
+                      "realmRoles":  [
+                                         "DOCTOR"
+                                     ],
+                      "firstName":  "Medico",
+                      "lastName":  "Demo",
+                      "email":  "demo.doctor@sussmartcare.local",
+                      "emailVerified":  true,
+                      "requiredActions":  [
+
+                                          ]
+                  },
+                  {
+                      "username":  "demo.operator",
+                      "enabled":  true,
+                      "credentials":  [
+                                          {
+                                              "type":  "password",
+                                              "value":  "demo123",
+                                              "temporary":  false
+                                          }
+                                      ],
+                      "realmRoles":  [
+                                         "OPERATOR"
+                                     ],
+                      "firstName":  "Operador",
+                      "lastName":  "Demo",
+                      "email":  "demo.operator@sussmartcare.local",
+                      "emailVerified":  true,
+                      "requiredActions":  [
+
+                                          ]
+                  },
+                  {
+                      "username":  "demo.ambulance",
+                      "enabled":  true,
+                      "credentials":  [
+                                          {
+                                              "type":  "password",
+                                              "value":  "demo123",
+                                              "temporary":  false
+                                          }
+                                      ],
+                      "realmRoles":  [
+                                         "AMBULANCE_TEAM"
+                                     ],
+                      "firstName":  "Ambulancia",
+                      "lastName":  "Demo",
+                      "email":  "demo.ambulance@sussmartcare.local",
+                      "emailVerified":  true,
+                      "requiredActions":  [
+
+                                          ]
+                  },
+                  {
+                      "username":  "service-account-device-client",
+                      "enabled":  true,
+                      "serviceAccountClientId":  "device-client",
+                      "realmRoles":  [
+                                         "DEVICE"
+                                     ]
+                  }
+              ]
+}

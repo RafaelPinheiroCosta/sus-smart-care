@@ -1,0 +1,1 @@
+create table if not exists patient_profile_views(patient_id uuid primary key,full_name varchar(200) not null,birth_date date,identity_status varchar(30) not null,merged_into_patient_id uuid,updated_at timestamptz not null);

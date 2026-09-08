@@ -1,0 +1,1 @@
+create table notifications(id uuid primary key, patient_id uuid not null, visit_id uuid, type varchar(60) not null, channel varchar(60) not null, message varchar(1000) not null, status varchar(30) not null, created_at timestamptz not null, delivered_at timestamptz); create index idx_notification_patient on notifications(patient_id,created_at desc);

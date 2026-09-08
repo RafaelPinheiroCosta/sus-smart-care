@@ -1,0 +1,1 @@
+package br.com.sussmartcare.notification.application; import br.com.sussmartcare.notification.domain.Notification; public interface NotificationChannel { boolean supports(String channel); void send(Notification notification); }

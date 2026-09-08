@@ -1,0 +1,1 @@
+create table visits(id uuid primary key, patient_id uuid not null, facility_id uuid not null, channel varchar(40) not null, status varchar(40) not null, pre_anamnesis varchar(2000), created_at timestamptz not null, checked_in_at timestamptz); create index idx_visit_patient on visits(patient_id);

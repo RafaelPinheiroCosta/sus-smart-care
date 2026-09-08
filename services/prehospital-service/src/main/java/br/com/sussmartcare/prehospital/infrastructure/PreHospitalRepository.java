@@ -1,0 +1,1 @@
+package br.com.sussmartcare.prehospital.infrastructure; import br.com.sussmartcare.prehospital.domain.*; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface PreHospitalRepository extends JpaRepository<PreHospitalEncounter,UUID>{}

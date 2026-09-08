@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientjourney.domain; public enum Channel { MOBILE, WEB, KIOSK, RECEPTION, AMBULANCE, EXTERNAL_SYSTEM }

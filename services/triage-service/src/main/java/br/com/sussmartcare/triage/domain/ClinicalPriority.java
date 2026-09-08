@@ -1,0 +1,1 @@
+package br.com.sussmartcare.triage.domain; public enum ClinicalPriority { LOW, MEDIUM, HIGH, EMERGENCY }

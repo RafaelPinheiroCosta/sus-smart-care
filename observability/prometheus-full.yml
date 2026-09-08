@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: sus-smart-care-services
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - api-gateway:8080
+          - patient-registry-service:8081
+          - patient-journey-service:8082
+          - triage-service:8083
+          - queue-service:8084
+          - telemetry-service:8085
+          - presence-service:8086
+          - prehospital-service:8087
+          - notification-service:8088
+          - identity-access-service:8089
+          - clinical-query-service:8090

@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientregistry.domain; import java.util.*; public interface PatientRepository { Patient save(Patient p); Optional<Patient> findById(UUID id); }

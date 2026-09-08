@@ -1,0 +1,25 @@
+server: { port: 8087 }
+spring:
+  application: { name: prehospital-service }
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/prehospital}
+    username: ${DB_USER:sus}
+    password: ${DB_PASSWORD:sus}
+  jpa:
+    hibernate.ddl-auto: validate
+    properties.hibernate.jdbc.time_zone: UTC
+    open-in-view: false
+  flyway.enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer: { key-serializer: org.apache.kafka.common.serialization.StringSerializer, value-serializer: org.apache.kafka.common.serialization.StringSerializer }
+    consumer: { group-id: prehospital-service, auto-offset-reset: earliest, key-deserializer: org.apache.kafka.common.serialization.StringDeserializer, value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer, properties.spring.json.trusted.packages: '*' }
+  security.oauth2.resourceserver.jwt.issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8180/realms/sus-smart-care}
+  security.oauth2.resourceserver.jwt.jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/sus-smart-care/protocol/openid-connect/certs}
+management:
+  endpoints.web.exposure.include: health,info,prometheus
+  endpoint.health.show-details: always
+springdoc.swagger-ui.path: /swagger-ui.html
+
+management.tracing.sampling.probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+management.otlp.tracing.endpoint: ${OTEL_TRACES_ENDPOINT:http://localhost:4318/v1/traces}

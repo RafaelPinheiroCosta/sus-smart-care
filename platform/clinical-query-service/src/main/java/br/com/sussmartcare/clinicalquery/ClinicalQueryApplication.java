@@ -1,0 +1,1 @@
+package br.com.sussmartcare.clinicalquery; import org.springframework.boot.SpringApplication; import org.springframework.boot.autoconfigure.SpringBootApplication; @SpringBootApplication public class ClinicalQueryApplication { public static void main(String[] a){SpringApplication.run(ClinicalQueryApplication.class,a);} }

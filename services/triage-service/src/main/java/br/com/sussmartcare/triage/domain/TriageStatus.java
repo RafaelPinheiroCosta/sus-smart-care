@@ -1,0 +1,1 @@
+package br.com.sussmartcare.triage.domain; public enum TriageStatus { STARTED, ASSESSED, CONFIRMED }

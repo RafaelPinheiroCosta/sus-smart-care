@@ -1,0 +1,22 @@
+flowchart LR
+  APP[App/PWA futuro] --> GW[API Gateway]
+  KIOSK[Totem/Recepção] --> GW
+  AMB[Ambulância] --> GW
+  DEV[Dispositivos] --> GW
+  GW --> PR[Patient Registry]
+  GW --> PJ[Patient Journey]
+  GW --> TR[Triage]
+  GW --> Q[Queue]
+  GW --> TE[Telemetry]
+  GW --> PS[Presence]
+  GW --> PH[Pre-Hospital]
+  GW --> NO[Notification]
+  GW --> CQ[Clinical Query]
+  TE --> K[(Kafka)]
+  TR --> K
+  PS --> K
+  PH --> K
+  K --> CQ
+  K --> NO
+  K --> Q
+  CQ --> DOC[View Data Médico]

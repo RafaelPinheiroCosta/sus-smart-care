@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientregistry.domain; public enum IdentifierType { CPF, CNS, OTHER }

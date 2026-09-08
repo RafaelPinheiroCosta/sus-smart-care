@@ -1,0 +1,44 @@
+name: ci
+on:
+  push:
+    branches: [main, develop]
+  pull_request: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Static architecture and contract validation
+        run: |
+          python -m pip install pyyaml
+          python scripts/static_validate.py
+          python scripts/validate-structure.py
+          python scripts/validate_contracts.py
+          python scripts/release_validate.py
+      - name: Maven verify
+        run: mvn -B -ntp verify
+      - name: Upload unit/integration test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: '**/target/surefire-reports/**'
+          if-no-files-found: ignore
+      - name: OWASP dependency report
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: sus-smart-care
+          path: '.'
+          format: HTML
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-report
+          path: reports
+          if-no-files-found: ignore

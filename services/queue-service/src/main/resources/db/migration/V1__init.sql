@@ -1,0 +1,1 @@
+create table queue_entries(id uuid primary key, visit_id uuid not null unique, facility_id uuid not null, clinical_priority varchar(30) not null, status varchar(40) not null, presence varchar(40) not null, entered_at timestamptz not null, expected_return_at timestamptz, grace_until timestamptz); create index idx_queue_facility on queue_entries(facility_id,status);

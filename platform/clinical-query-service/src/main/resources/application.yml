@@ -1,0 +1,25 @@
+server: { port: 8090 }
+spring:
+  application: { name: clinical-query-service }
+  datasource: { url: '${DB_URL:jdbc:postgresql://localhost:5432/clinical_query}', username: '${DB_USER:sus}', password: '${DB_PASSWORD:sus}' }
+  jpa: { hibernate.ddl-auto: validate, open-in-view: false }
+  flyway.enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer: { key-serializer: org.apache.kafka.common.serialization.StringSerializer, value-serializer: org.apache.kafka.common.serialization.StringSerializer }
+    listener:
+      ack-mode: record
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  security.oauth2.resourceserver.jwt.issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8180/realms/sus-smart-care}
+  security.oauth2.resourceserver.jwt.jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/sus-smart-care/protocol/openid-connect/certs}
+management.endpoints.web.exposure.include: health,info,prometheus
+management.tracing.sampling.probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+management.otlp.tracing.endpoint: ${OTEL_TRACES_ENDPOINT:http://localhost:4318/v1/traces}

@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientregistry.domain; public enum IdentityStatus { PROVISIONAL, CONFIRMED, MERGED }

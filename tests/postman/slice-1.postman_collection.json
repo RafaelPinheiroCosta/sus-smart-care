@@ -1,0 +1,256 @@
+{
+  "info": {
+    "name": "SUS Smart Care - Slice 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "patientRegistry",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "journey",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "triage",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "queue",
+      "value": "http://localhost:8084"
+    },
+    {
+      "key": "facilityId",
+      "value": "UPA-001"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Cadastrar paciente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{patientRegistry}}/api/v1/patients",
+          "host": [
+            "{{patientRegistry}}/api/v1/patients"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"fullName\": \"Paciente Demo\", \"cpf\": \"00000000000\", \"cns\": \"700000000000000\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"201\",()=>pm.response.to.have.status(201));",
+              "const b=pm.response.json(); pm.collectionVariables.set(\"patientId\",b.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Criar visita",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{journey}}/api/v1/visits",
+          "host": [
+            "{{journey}}/api/v1/visits"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"patientId\": \"{{patientId}}\", \"facilityId\": \"{{facilityId}}\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"201\",()=>pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"visitId\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Check-in",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{journey}}/api/v1/visits/{{visitId}}/check-in",
+          "host": [
+            "{{journey}}/api/v1/visits/{{visitId}}/check-in"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Iniciar triagem",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{triage}}/api/v1/triages",
+          "host": [
+            "{{triage}}/api/v1/triages"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"visitId\": \"{{visitId}}\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"201\",()=>pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"triageId\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Confirmar prioridade",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{triage}}/api/v1/triages/{{triageId}}/priority",
+          "host": [
+            "{{triage}}/api/v1/triages/{{triageId}}/priority"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"priority\": \"URGENT\", \"reason\": \"Prioridade validada por profissional para demonstração\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Inserir na fila",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{queue}}/api/v1/queue-entries",
+          "host": [
+            "{{queue}}/api/v1/queue-entries"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"visitId\": \"{{visitId}}\", \"facilityId\": \"{{facilityId}}\", \"clinicalPriority\": \"URGENT\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"201\",()=>pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Consultar fila",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{queue}}/api/v1/queue-entries?facilityId={{facilityId}}",
+          "host": [
+            "{{queue}}/api/v1/queue-entries?facilityId={{facilityId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200\",()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

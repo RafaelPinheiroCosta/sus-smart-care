@@ -1,0 +1,1 @@
+alter table pre_hospital_encounters add column if not exists visit_id uuid;

@@ -1,0 +1,32 @@
+flowchart LR
+  APP[App/PWA] --> GW[API Gateway]
+  TOTEM[Totem] --> GW
+  STAFF[Recepção/Staff] --> GW
+  AMB[Ambulância] --> GW
+  DEV[Medical Devices/Gateways] --> TEL[Telemetry Service]
+
+  GW --> PR[Patient Registry]
+  GW --> PJ[Patient Journey]
+  GW --> TRI[Triage]
+  GW --> Q[Queue]
+  GW --> PRES[Presence]
+  GW --> PRE[Pre-Hospital]
+
+  PR --> PJ
+  PRE --> PR
+  PRE --> TEL
+  TEL --> K[(Kafka)]
+  K --> TRI
+  TRI --> K
+  K --> Q
+  PRES --> K
+  K --> NOTIF[Notification]
+  K --> PROJ[Projection Workers]
+  PROJ --> REDIS[(Redis)]
+  PROJ --> READ[(PostgreSQL Read Models)]
+
+  NOTIF --> PUSH[Push/SMS]
+  NOTIF --> DISPLAY[Telão/Chamada verbal]
+
+  READ --> CLINICAL[ClinicalPatientView]
+  REDIS --> PATVIEW[PatientCurrentVisitView]

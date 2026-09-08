@@ -1,0 +1,1 @@
+package br.com.sussmartcare.presence.infrastructure; import br.com.sussmartcare.presence.domain.*; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface PresenceEventRepository extends JpaRepository<PresenceEvent,UUID>{List<PresenceEvent> findByVisitIdOrderByOccurredAtAsc(UUID visitId);}

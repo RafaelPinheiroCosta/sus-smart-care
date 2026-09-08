@@ -1,0 +1,1 @@
+create table clinical_patient_views(visit_id uuid primary key, patient_id uuid, clinical_priority varchar(30), presence_status varchar(60), latest_biometric_type varchar(120), latest_biometric_value double precision, latest_biometric_unit varchar(40), pre_arrival_risk varchar(40), pre_arrival_eta timestamptz, updated_at timestamptz not null);

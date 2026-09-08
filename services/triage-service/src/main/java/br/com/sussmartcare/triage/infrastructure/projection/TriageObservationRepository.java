@@ -1,0 +1,1 @@
+package br.com.sussmartcare.triage.infrastructure.projection; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface TriageObservationRepository extends JpaRepository<TriageObservation,UUID>{List<TriageObservation> findTop50ByVisitIdOrderByMeasuredAtDesc(UUID visitId);}

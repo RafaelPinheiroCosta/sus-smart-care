@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sus-smart-care
+resources:
+  - api-gateway.yaml
+  - clinical-query-service.yaml
+  - identity-access-service.yaml
+  - namespace.yaml
+  - notification-service.yaml
+  - patient-journey-service.yaml
+  - patient-registry-service.yaml
+  - prehospital-service.yaml
+  - presence-service.yaml
+  - queue-service.yaml
+  - telemetry-service.yaml
+  - triage-service.yaml

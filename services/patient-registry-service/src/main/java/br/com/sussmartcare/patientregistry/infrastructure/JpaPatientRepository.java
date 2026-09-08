@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientregistry.infrastructure; import br.com.sussmartcare.patientregistry.domain.*; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface JpaPatientRepository extends PatientRepository, JpaRepository<Patient,UUID> {}

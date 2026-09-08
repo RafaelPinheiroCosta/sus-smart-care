@@ -1,0 +1,1 @@
+alter table queue_entries add column if not exists display_code varchar(20); update queue_entries set display_code='Q-'||upper(substr(replace(id::text,'-',''),1,8)) where display_code is null; alter table queue_entries alter column display_code set not null; create unique index if not exists uk_queue_display_code on queue_entries(display_code);

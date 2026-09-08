@@ -1,0 +1,215 @@
+openapi: 3.0.3
+info:
+  title: Patient Journey API
+  version: 0.4.0
+  description: Pre-arrival journey, pre-anamnesis and check-in. Pre-registration never
+    grants clinical priority.
+servers:
+- url: http://localhost:8080
+  description: API Gateway
+paths:
+  /api/v1/pre-visits:
+    post:
+      operationId: createPreVisit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVisitRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Visit'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/visits/{id}:
+    get:
+      operationId: getVisit
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Visit'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/pre-visits/{id}/anamnesis:
+    put:
+      operationId: recordPreAnamnesis
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnamnesisRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Visit'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/pre-visits/{id}/check-in:
+    post:
+      operationId: checkIn
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Visit'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+    Visit:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        channel:
+          type: string
+          enum:
+          - MOBILE
+          - WEB
+          - KIOSK
+          - RECEPTION
+          - AMBULANCE
+          - EXTERNAL_SYSTEM
+        status:
+          type: string
+        preAnamnesis:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        checkedInAt:
+          type: string
+          format: date-time
+          nullable: true
+    CreateVisitRequest:
+      type: object
+      required:
+      - patientId
+      - facilityId
+      - channel
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        channel:
+          type: string
+          enum:
+          - MOBILE
+          - WEB
+          - KIOSK
+          - RECEPTION
+          - AMBULANCE
+          - EXTERNAL_SYSTEM
+    AnamnesisRequest:
+      type: object
+      required:
+      - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+security:
+- bearerAuth: []

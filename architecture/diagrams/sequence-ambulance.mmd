@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant A as Ambulância
+  participant P as Patient Registry
+  participant H as Pre-Hospital
+  participant T as Telemetry
+  participant K as Kafka
+  participant C as Clinical Query
+  participant N as Notification
+  A->>P: identificar/criar Patient provisório
+  A->>H: criar PreHospitalEncounter + ETA
+  A->>T: abrir TelemetrySession
+  loop telemetria
+    A->>T: observação biométrica
+    T-->>K: BiometricObservationReceived
+    K-->>C: atualizar ClinicalPatientView
+  end
+  A->>H: atualizar risco/ETA
+  H-->>K: PreArrivalAlertCreated
+  K-->>N: avisar equipe da unidade

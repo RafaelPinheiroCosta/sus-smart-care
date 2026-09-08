@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Presence API
+  version: 0.4.0
+  description: Technology-neutral presence events from mobile, kiosk, reception, QR/NFC/beacon
+    or staff confirmation.
+servers:
+- url: http://localhost:8080
+  description: API Gateway
+paths:
+  /api/v1/presence/events:
+    post:
+      operationId: recordPresenceEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresenceRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresenceEvent'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/presence/visits/{visitId}:
+    get:
+      operationId: presenceHistory
+      parameters:
+      - name: visitId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: History
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PresenceEvent'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+    PresenceRequest:
+      type: object
+      required:
+      - visitId
+      - patientId
+      - eventType
+      - source
+      properties:
+        visitId:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          enum:
+          - ENTERED_FACILITY
+          - LEFT_FACILITY
+          - ENTERED_ZONE
+          - LEFT_ZONE
+          - PATIENT_RETURNED
+        zoneId:
+          type: string
+        source:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+    PresenceEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        visitId:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        zoneId:
+          type: string
+          nullable: true
+        source:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+security:
+- bearerAuth: []

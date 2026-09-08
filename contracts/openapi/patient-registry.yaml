@@ -1,0 +1,451 @@
+openapi: 3.0.3
+info:
+  title: Patient Registry API
+  version: 0.4.0
+  description: Canonical patient identity independent from user accounts and channels.
+servers:
+- url: http://localhost:8080
+  description: API Gateway
+paths:
+  /api/v1/patients:
+    post:
+      operationId: registerPatient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePatientRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/patients/provisional:
+    post:
+      operationId: createProvisionalPatient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProvisionalPatientRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/patients/{id}:
+    get:
+      operationId: getPatient
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/patients/by-identifier:
+    get:
+      operationId: findPatientByIdentifier
+      parameters:
+      - name: type
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - CPF
+          - CNS
+          - OTHER
+      - name: value
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/patients/{id}/identifiers:
+    get:
+      operationId: listPatientIdentifiers
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Identifiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientIdentifier'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/patients/{id}/resolve-identity:
+    post:
+      operationId: resolvePatientIdentity
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveIdentityRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/patients/{id}/merge:
+    post:
+      operationId: mergePatientRecord
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MergePatientRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/patients/{id}/representatives:
+    post:
+      operationId: linkRepresentative
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkRepresentativeRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepresentativeRelationship'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+    get:
+      operationId: listRepresentatives
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Active representatives
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RepresentativeRelationship'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/patients/representatives/{relationshipId}:
+    delete:
+      operationId: revokeRepresentative
+      parameters:
+      - name: relationshipId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Revoked
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+    Patient:
+      type: object
+      required:
+      - id
+      - fullName
+      - identityStatus
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        identityStatus:
+          type: string
+          enum:
+          - PROVISIONAL
+          - CONFIRMED
+          - MERGED
+        createdAt:
+          type: string
+          format: date-time
+        mergedIntoPatientId:
+          type: string
+          format: uuid
+          nullable: true
+    CreatePatientRequest:
+      type: object
+      required:
+      - fullName
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+        birthDate:
+          type: string
+          format: date
+        identifierType:
+          type: string
+          enum:
+          - CPF
+          - CNS
+          - OTHER
+        identifierValue:
+          type: string
+    ProvisionalPatientRequest:
+      type: object
+      required:
+      - description
+      properties:
+        description:
+          type: string
+    ResolveIdentityRequest:
+      type: object
+      required:
+      - fullName
+      properties:
+        fullName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+    MergePatientRequest:
+      type: object
+      required:
+      - canonicalPatientId
+      properties:
+        canonicalPatientId:
+          type: string
+          format: uuid
+    LinkRepresentativeRequest:
+      type: object
+      required:
+      - representativeUserId
+      - type
+      properties:
+        representativeUserId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+          - SELF
+          - PARENT
+          - LEGAL_GUARDIAN
+          - CAREGIVER
+          - AUTHORIZED_REPRESENTATIVE
+    RepresentativeRelationship:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        representativeUserId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+          nullable: true
+        active:
+          type: boolean
+    PatientIdentifier:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        value:
+          type: string
+security:
+- bearerAuth: []

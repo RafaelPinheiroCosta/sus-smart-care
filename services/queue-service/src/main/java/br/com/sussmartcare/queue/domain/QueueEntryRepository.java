@@ -1,0 +1,1 @@
+package br.com.sussmartcare.queue.domain; import java.util.*; public interface QueueEntryRepository {QueueEntry save(QueueEntry q);Optional<QueueEntry> findById(UUID id);List<QueueEntry> findByFacilityId(UUID facilityId);Optional<QueueEntry> findByVisitId(UUID visitId);List<QueueEntry> findByPresenceAndStatus(PresenceState presence,QueueEntryStatus status);}

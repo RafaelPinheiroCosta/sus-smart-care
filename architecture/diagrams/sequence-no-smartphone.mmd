@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant R as Recepção/Totem
+  participant P as Patient Journey
+  participant Q as Queue
+  participant S as Presence
+  participant N as Notification/Telão
+  R->>P: check-in
+  R->>Q: paciente entra na fila após triagem
+  Q-->>N: situação/tempo para painel
+  R->>S: registrar saída temporária
+  S-->>Q: PatientPresenceChanged(LEFT)
+  Q->>Q: aplica retorno + tolerância
+  R->>S: registrar retorno
+  S-->>Q: PatientPresenceChanged(ENTERED)
+  Q->>Q: recalcula posição operacional

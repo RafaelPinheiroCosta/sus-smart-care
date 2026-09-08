@@ -1,0 +1,1 @@
+create table communication_profiles(user_id uuid primary key, has_smartphone boolean not null, preferred_channel varchar(60) not null);

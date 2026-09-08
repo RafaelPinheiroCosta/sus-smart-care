@@ -1,0 +1,1 @@
+package br.com.sussmartcare.notification.infrastructure; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface VisitPatientLinkRepository extends JpaRepository<VisitPatientLink,UUID>{List<VisitPatientLink> findByPatientId(UUID patientId);}

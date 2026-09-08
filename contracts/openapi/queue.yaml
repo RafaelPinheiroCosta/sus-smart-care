@@ -1,0 +1,348 @@
+openapi: 3.0.3
+info:
+  title: Queue Management API
+  version: 0.4.0
+  description: Clinical priority and operational readiness are separate. Leaving the
+    facility can change operational position, never clinical priority.
+servers:
+- url: http://localhost:8080
+  description: API Gateway
+paths:
+  /api/v1/queue-entries:
+    post:
+      operationId: enqueuePatient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterQueueRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueEntry'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/queue-entries/by-visit/{visitId}:
+    get:
+      operationId: getQueueEntryByVisit
+      parameters:
+      - name: visitId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueEntry'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/queue-entries/{id}/leave:
+    post:
+      operationId: leaveTemporarily
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueEntry'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/queue-entries/{id}/return:
+    post:
+      operationId: returnToFacility
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueEntry'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/queue-entries/{id}/call:
+    post:
+      operationId: callPatient
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueEntry'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/queues/{facilityId}/view:
+    get:
+      operationId: getOperationalQueueView
+      parameters:
+      - name: facilityId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Operational queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QueueView'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/queues/{facilityId}/public-view:
+    get:
+      operationId: getAnonymizedPublicQueueView
+      security: []
+      parameters:
+      - name: facilityId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Public queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QueuePublicView'
+  /api/v1/queues/{facilityId}/estimate:
+    get:
+      operationId: getFacilityPreTriageEstimate
+      security: []
+      parameters:
+      - name: facilityId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityEstimate'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+    QueueEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        visitId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        displayCode:
+          type: string
+        clinicalPriority:
+          type: string
+        status:
+          type: string
+        presence:
+          type: string
+        enteredAt:
+          type: string
+          format: date-time
+        expectedReturnAt:
+          type: string
+          format: date-time
+          nullable: true
+        graceUntil:
+          type: string
+          format: date-time
+          nullable: true
+    EnterQueueRequest:
+      type: object
+      required:
+      - visitId
+      - facilityId
+      - clinicalPriority
+      properties:
+        visitId:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        clinicalPriority:
+          type: string
+          enum:
+          - LOW
+          - MEDIUM
+          - HIGH
+          - EMERGENCY
+    LeaveRequest:
+      type: object
+      required:
+      - expectedReturnMinutes
+      - graceMinutes
+      properties:
+        expectedReturnMinutes:
+          type: integer
+          minimum: 1
+        graceMinutes:
+          type: integer
+          minimum: 0
+    QueueView:
+      type: object
+      properties:
+        visitId:
+          type: string
+          format: uuid
+        displayCode:
+          type: string
+        estimatedPosition:
+          type: integer
+        estimatedMinutes:
+          type: integer
+        clinicalPriority:
+          type: string
+        presence:
+          type: string
+        status:
+          type: string
+    QueuePublicView:
+      type: object
+      properties:
+        displayCode:
+          type: string
+        estimatedPosition:
+          type: integer
+        estimatedMinutes:
+          type: integer
+        status:
+          type: string
+    FacilityEstimate:
+      type: object
+      properties:
+        waitingPatients:
+          type: integer
+        minMinutes:
+          type: integer
+        maxMinutes:
+          type: integer
+        loadLevel:
+          type: string
+security:
+- bearerAuth: []

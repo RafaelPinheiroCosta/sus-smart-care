@@ -1,0 +1,2 @@
+create table pre_hospital_encounters(id uuid primary key, patient_id uuid not null, ambulance_id varchar(100) not null, destination_facility_id uuid not null, estimated_arrival_at timestamptz, status varchar(40) not null, risk_level varchar(40), created_at timestamptz not null);
+create table outbox_events(id uuid primary key, topic varchar(160) not null, event_key varchar(160) not null, payload varchar(8000) not null, created_at timestamptz not null, published_at timestamptz); create index idx_outbox_pending on outbox_events(published_at,created_at);

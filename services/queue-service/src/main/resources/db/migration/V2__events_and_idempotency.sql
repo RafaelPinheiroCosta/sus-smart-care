@@ -1,0 +1,2 @@
+create table if not exists outbox_events(id uuid primary key,topic varchar(160) not null,event_key varchar(160) not null,payload varchar(16000) not null,created_at timestamptz not null,published_at timestamptz,attempts integer not null default 0,next_attempt_at timestamptz not null,last_error varchar(2000));create index if not exists idx_queue_outbox_pending on outbox_events(published_at,next_attempt_at,created_at);
+create table if not exists processed_events(event_id uuid primary key,consumer_name varchar(120) not null,processed_at timestamptz not null);

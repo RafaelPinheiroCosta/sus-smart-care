@@ -1,0 +1,1 @@
+package br.com.sussmartcare.queue.infrastructure.messaging; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface ProcessedEventRepository extends JpaRepository<ProcessedEvent,UUID>{}

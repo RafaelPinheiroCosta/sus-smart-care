@@ -1,0 +1,159 @@
+asyncapi: 3.0.0
+info:
+  title: SUS Smart Care Integration Events
+  version: 0.4.0
+  description: >-
+    Versioned integration-event catalog for the event-driven platform. Kafka is
+    the transport; the envelope carries identity, correlation and schema version.
+defaultContentType: application/json
+channels:
+  patientRegistered: { address: patient-registered, messages: { event: { $ref: '#/components/messages/PatientRegistered' } } }
+  patientProvisionalCreated: { address: patient-provisional-created, messages: { event: { $ref: '#/components/messages/PatientProfile' } } }
+  patientIdentityResolved: { address: patient-identity-resolved, messages: { event: { $ref: '#/components/messages/PatientProfile' } } }
+  patientProfileUpdated: { address: patient-profile-updated, messages: { event: { $ref: '#/components/messages/PatientProfile' } } }
+  patientRecordsMerged: { address: patient-records-merged, messages: { event: { $ref: '#/components/messages/PatientMerged' } } }
+  preVisitCreated: { address: pre-visit-created, messages: { event: { $ref: '#/components/messages/PreVisitCreated' } } }
+  preAnamnesisRecorded: { address: pre-anamnesis-recorded, messages: { event: { $ref: '#/components/messages/PreAnamnesisRecorded' } } }
+  patientCheckedIn: { address: patient-checked-in, messages: { event: { $ref: '#/components/messages/PatientCheckedIn' } } }
+  biometricObservationReceived: { address: biometric-observation-received, messages: { event: { $ref: '#/components/messages/BiometricObservation' } } }
+  triageAssessmentGenerated: { address: triage-assessment-generated, messages: { event: { $ref: '#/components/messages/TriageAssessment' } } }
+  clinicalPriorityConfirmed: { address: clinical-priority-confirmed, messages: { event: { $ref: '#/components/messages/ClinicalPriorityConfirmed' } } }
+  patientPresenceChanged: { address: patient-presence-changed, messages: { event: { $ref: '#/components/messages/PresenceChanged' } } }
+  patientQueued: { address: patient-queued, messages: { event: { $ref: '#/components/messages/GenericIntegrationEvent' } } }
+  queuePositionEstimated: { address: queue-position-estimated, messages: { event: { $ref: '#/components/messages/QueuePosition' } } }
+  queueEntryStateChanged: { address: queue-entry-state-changed, messages: { event: { $ref: '#/components/messages/GenericIntegrationEvent' } } }
+  queueReturnRequired: { address: queue-return-required, messages: { event: { $ref: '#/components/messages/GenericIntegrationEvent' } } }
+  patientCalled: { address: patient-called, messages: { event: { $ref: '#/components/messages/GenericIntegrationEvent' } } }
+  preArrivalAlertCreated: { address: pre-arrival-alert-created, messages: { event: { $ref: '#/components/messages/PreArrivalAlert' } } }
+components:
+  messages:
+    GenericIntegrationEvent: { payload: { $ref: '#/components/schemas/IntegrationEventEnvelope' } }
+    PatientRegistered: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PatientProfileData' } } } ] } }
+    PatientProfile: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PatientProfileData' } } } ] } }
+    PatientMerged: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PatientMergedData' } } } ] } }
+    PreVisitCreated: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PreVisitCreatedData' } } } ] } }
+    PreAnamnesisRecorded: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PreAnamnesisData' } } } ] } }
+    PatientCheckedIn: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PatientCheckedInData' } } } ] } }
+    BiometricObservation: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/BiometricObservationData' } } } ] } }
+    TriageAssessment: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/TriageAssessmentData' } } } ] } }
+    ClinicalPriorityConfirmed: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/ClinicalPriorityConfirmedData' } } } ] } }
+    PresenceChanged: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PresenceChangedData' } } } ] } }
+    QueuePosition: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/QueuePositionData' } } } ] } }
+    PreArrivalAlert: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PreArrivalAlertData' } } } ] } }
+  schemas:
+    IntegrationEventEnvelope:
+      type: object
+      required: [eventId, eventType, aggregateId, occurredAt, schemaVersion, data]
+      properties:
+        eventId: { type: string, format: uuid }
+        eventType: { type: string }
+        aggregateId: { type: string }
+        occurredAt: { type: string, format: date-time }
+        schemaVersion: { type: string, example: '1' }
+        correlationId: { type: [string, 'null'] }
+        traceId: { type: [string, 'null'] }
+        data: { type: object, additionalProperties: true }
+    PatientProfileData:
+      type: object
+      required: [patientId, fullName, identityStatus, updatedAt]
+      properties:
+        patientId: { type: string, format: uuid }
+        fullName: { type: string }
+        birthDate: { type: [string, 'null'], format: date }
+        identityStatus: { type: string }
+        mergedIntoPatientId: { type: [string, 'null'], format: uuid }
+        updatedAt: { type: string, format: date-time }
+    PatientMergedData:
+      type: object
+      required: [sourcePatientId, canonicalPatientId, occurredAt]
+      properties:
+        sourcePatientId: { type: string, format: uuid }
+        canonicalPatientId: { type: string, format: uuid }
+        occurredAt: { type: string, format: date-time }
+    PreVisitCreatedData:
+      type: object
+      required: [visitId, patientId, facilityId, channel, createdAt]
+      properties:
+        visitId: { type: string, format: uuid }
+        patientId: { type: string, format: uuid }
+        facilityId: { type: string, format: uuid }
+        channel: { type: string }
+        createdAt: { type: string, format: date-time }
+    PreAnamnesisData:
+      type: object
+      required: [visitId, text]
+      properties:
+        visitId: { type: string, format: uuid }
+        text: { type: string }
+    PatientCheckedInData:
+      type: object
+      required: [visitId, patientId, checkedInAt]
+      properties:
+        visitId: { type: string, format: uuid }
+        patientId: { type: string, format: uuid }
+        checkedInAt: { type: string, format: date-time }
+    BiometricObservationData:
+      type: object
+      required: [patientId, type, value, measuredAt]
+      properties:
+        patientId: { type: string, format: uuid }
+        visitId: { type: [string, 'null'], format: uuid }
+        preHospitalEncounterId: { type: [string, 'null'], format: uuid }
+        deviceId: { type: string, format: uuid }
+        type: { type: string }
+        value: { type: number }
+        unit: { type: [string, 'null'] }
+        measuredAt: { type: string, format: date-time }
+        sourceContext: { type: string }
+    TriageAssessmentData:
+      type: object
+      required: [triageId, visitId, recommendation]
+      properties:
+        triageId: { type: string, format: uuid }
+        visitId: { type: string, format: uuid }
+        recommendation: { type: string }
+        confidence: { type: [number, 'null'] }
+        reasoning: { type: [string, 'null'] }
+        modelName: { type: [string, 'null'] }
+        modelVersion: { type: [string, 'null'] }
+    ClinicalPriorityConfirmedData:
+      type: object
+      required: [visitId, priority, professionalId, decidedAt]
+      properties:
+        visitId: { type: string, format: uuid }
+        priority: { type: string, enum: [LOW, MEDIUM, HIGH, EMERGENCY] }
+        professionalId: { type: string, format: uuid }
+        decidedAt: { type: string, format: date-time }
+    PresenceChangedData:
+      type: object
+      required: [visitId, patientId, eventType, source, occurredAt]
+      properties:
+        visitId: { type: string, format: uuid }
+        patientId: { type: string, format: uuid }
+        eventType: { type: string }
+        zoneId: { type: [string, 'null'] }
+        source: { type: string }
+        occurredAt: { type: string, format: date-time }
+    QueuePositionData:
+      type: object
+      required: [visitId, facilityId, estimatedPosition, estimatedMinutes, status, updatedAt]
+      properties:
+        visitId: { type: string, format: uuid }
+        displayCode: { type: string }
+        facilityId: { type: string, format: uuid }
+        estimatedPosition: { type: integer }
+        estimatedMinutes: { type: integer }
+        clinicalPriority: { type: string }
+        presence: { type: string }
+        status: { type: string }
+        updatedAt: { type: string, format: date-time }
+    PreArrivalAlertData:
+      type: object
+      required: [patientId, riskLevel]
+      properties:
+        patientId: { type: string, format: uuid }
+        visitId: { type: [string, 'null'], format: uuid }
+        encounterId: { type: string, format: uuid }
+        facilityId: { type: string, format: uuid }
+        riskLevel: { type: string }
+        eta: { type: [string, 'null'], format: date-time }

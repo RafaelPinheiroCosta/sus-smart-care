@@ -1,0 +1,4 @@
+package br.com.sussmartcare.patientjourney.infrastructure.eventsourcing;
+import jakarta.persistence.*; import java.time.*; import java.util.*;
+@Entity @Table(name="visit_events",uniqueConstraints=@UniqueConstraint(name="uk_visit_stream_version",columnNames={"stream_id","event_version"}))
+public class VisitStoredEvent {@Id private UUID id;@Column(name="stream_id",nullable=false)private UUID streamId;@Column(name="event_version",nullable=false)private long eventVersion;@Column(nullable=false)private String eventType;@Column(nullable=false,length=16000)private String payload;@Column(nullable=false)private Instant occurredAt;protected VisitStoredEvent(){}public VisitStoredEvent(UUID s,long v,String t,String p,Instant at){id=UUID.randomUUID();streamId=s;eventVersion=v;eventType=t;payload=p;occurredAt=at;}public String getEventType(){return eventType;}public String getPayload(){return payload;}public long getEventVersion(){return eventVersion;}}

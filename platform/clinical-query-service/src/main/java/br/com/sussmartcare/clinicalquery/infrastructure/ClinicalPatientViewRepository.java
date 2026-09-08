@@ -1,0 +1,1 @@
+package br.com.sussmartcare.clinicalquery.infrastructure; import br.com.sussmartcare.clinicalquery.domain.*; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface ClinicalPatientViewRepository extends JpaRepository<ClinicalPatientView,UUID>{List<ClinicalPatientView> findByPatientId(UUID patientId);}

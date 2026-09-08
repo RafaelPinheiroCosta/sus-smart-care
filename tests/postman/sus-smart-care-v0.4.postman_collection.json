@@ -1,0 +1,514 @@
+{
+  "info": {
+    "name": "SUS Smart Care v0.4 - E2E Digital Patient",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "gateway",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "keycloak",
+      "value": "http://localhost:8180"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "facilityId",
+      "value": ""
+    },
+    {
+      "key": "patientId",
+      "value": ""
+    },
+    {
+      "key": "visitId",
+      "value": ""
+    },
+    {
+      "key": "triageId",
+      "value": ""
+    },
+    {
+      "key": "deviceId",
+      "value": ""
+    },
+    {
+      "key": "sessionId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Auth Admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "client_id",
+              "value": "sus-smart-care-postman",
+              "type": "text"
+            },
+            {
+              "key": "grant_type",
+              "value": "password",
+              "type": "text"
+            },
+            {
+              "key": "username",
+              "value": "demo.admin",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "admin123",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{keycloak}}/realms/sus-smart-care/protocol/openid-connect/token",
+          "host": [
+            "{{keycloak}}"
+          ],
+          "path": [
+            "realms",
+            "sus-smart-care",
+            "protocol",
+            "openid-connect",
+            "token"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"token\",()=>pm.response.to.have.status(200));",
+              "pm.collectionVariables.set(\"token\",pm.response.json().access_token);",
+              "if(!pm.collectionVariables.get(\"facilityId\")) pm.collectionVariables.set(\"facilityId\",pm.variables.replaceIn(\"{{$guid}}\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Register Patient",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/patients",
+          "host": [
+            "{{gateway}}/api/v1/patients"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"fullName\": \"Paciente Postman\", \"birthDate\": \"1988-04-10\", \"identifierType\": \"CPF\", \"identifierValue\": \"98765432100\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"created\",()=>pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"patientId\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Pre Visit",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/pre-visits",
+          "host": [
+            "{{gateway}}/api/v1/pre-visits"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"patientId\": \"{{patientId}}\", \"facilityId\": \"{{facilityId}}\", \"channel\": \"MOBILE\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"visitId\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Anamnesis",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/pre-visits/{{visitId}}/anamnesis",
+          "host": [
+            "{{gateway}}/api/v1/pre-visits/{{visitId}}/anamnesis"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"text\": \"Pré-anamnese demonstrativa pelo Postman.\"}"
+        }
+      }
+    },
+    {
+      "name": "04 - Check In",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/pre-visits/{{visitId}}/check-in",
+          "host": [
+            "{{gateway}}/api/v1/pre-visits/{{visitId}}/check-in"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "05 - Triage by Visit",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{gateway}}/api/v1/triages/by-visit/{{visitId}}",
+          "host": [
+            "{{gateway}}/api/v1/triages/by-visit/{{visitId}}"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"projection available\",()=>pm.response.to.have.status(200));",
+              "pm.collectionVariables.set(\"triageId\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Device",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/devices",
+          "host": [
+            "{{gateway}}/api/v1/devices"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"externalId\": \"POSTMAN-DEVICE-01\", \"deviceType\": \"MULTIPARAMETER_MONITOR\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"deviceId\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Telemetry Session",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/telemetry/sessions",
+          "host": [
+            "{{gateway}}/api/v1/telemetry/sessions"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"patientId\": \"{{patientId}}\", \"visitId\": \"{{visitId}}\", \"sourceContext\": \"TRIAGE\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"sessionId\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - SpO2",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/telemetry/sessions/{{sessionId}}/observations",
+          "host": [
+            "{{gateway}}/api/v1/telemetry/sessions/{{sessionId}}/observations"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"deviceId\": \"{{deviceId}}\", \"type\": \"OXYGEN_SATURATION\", \"value\": 94, \"unit\": \"%\"}"
+        }
+      }
+    },
+    {
+      "name": "09 - AI Boundary",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/triages/{{triageId}}/assessment/ai",
+          "host": [
+            "{{gateway}}/api/v1/triages/{{triageId}}/assessment/ai"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "10 - Human Decision",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{gateway}}/api/v1/triages/{{triageId}}/decision",
+          "host": [
+            "{{gateway}}/api/v1/triages/{{triageId}}/decision"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"priority\": \"HIGH\", \"professionalId\": \"00000000-0000-0000-0000-000000000001\"}"
+        }
+      }
+    },
+    {
+      "name": "11 - Clinical View",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{gateway}}/api/v1/clinical-view/visits/{{visitId}}",
+          "host": [
+            "{{gateway}}/api/v1/clinical-view/visits/{{visitId}}"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "12 - Public Queue",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{gateway}}/api/v1/queues/{{facilityId}}/public-view",
+          "host": [
+            "{{gateway}}/api/v1/queues/{{facilityId}}/public-view"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

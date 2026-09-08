@@ -1,0 +1,1 @@
+package br.com.sussmartcare.queue.domain; public enum QueueEntryStatus { WAITING, RETURN_REQUIRED, GRACE_PERIOD, MISSED_CALL, CALLED, IN_SERVICE, COMPLETED }

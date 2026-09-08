@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientjourney.domain; import java.util.*; public interface VisitRepository { Visit save(Visit v); Optional<Visit> findById(UUID id); }

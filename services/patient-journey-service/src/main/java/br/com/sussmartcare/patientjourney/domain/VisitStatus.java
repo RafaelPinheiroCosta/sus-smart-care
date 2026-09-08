@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientjourney.domain; public enum VisitStatus { PRE_ARRIVAL, ARRIVED, WAITING_TRIAGE, IN_TRIAGE, TRIAGED, QUEUED, WAITING, CALLED, IN_SERVICE, WAITING_NEXT_STAGE, COMPLETED, CANCELLED }

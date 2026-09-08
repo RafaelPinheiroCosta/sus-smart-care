@@ -1,0 +1,285 @@
+openapi: 3.0.3
+info:
+  title: Triage API
+  version: 0.4.0
+  description: Human-in-the-loop clinical triage. AI is decision support and never
+    the authoritative priority.
+servers:
+- url: http://localhost:8080
+  description: API Gateway
+paths:
+  /api/v1/triages:
+    post:
+      operationId: startTriage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartTriageRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Triage'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/triages/{id}:
+    get:
+      operationId: getTriage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Triage'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/triages/by-visit/{visitId}:
+    get:
+      operationId: getTriageByVisit
+      parameters:
+      - name: visitId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Triage'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/triages/{id}/assessment:
+    post:
+      operationId: recordAssessment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssessmentRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Triage'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/triages/{id}/assessment/ai:
+    post:
+      operationId: assessWithAi
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Decision-support assessment generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Triage'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+  /api/v1/triages/{id}/decision:
+    post:
+      operationId: confirmClinicalPriority
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+      responses:
+        '200':
+          description: Professional decision confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Triage'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+    ClinicalPriority:
+      type: string
+      enum:
+      - LOW
+      - MEDIUM
+      - HIGH
+      - EMERGENCY
+    Triage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        visitId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        aiRecommendation:
+          $ref: '#/components/schemas/ClinicalPriority'
+        aiConfidence:
+          type: number
+          format: double
+          nullable: true
+        aiReasoning:
+          type: string
+          nullable: true
+        finalPriority:
+          $ref: '#/components/schemas/ClinicalPriority'
+        decidedBy:
+          type: string
+          format: uuid
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+          nullable: true
+    StartTriageRequest:
+      type: object
+      required:
+      - visitId
+      properties:
+        visitId:
+          type: string
+          format: uuid
+    AssessmentRequest:
+      type: object
+      required:
+      - recommendation
+      - confidence
+      - reasoning
+      properties:
+        recommendation:
+          $ref: '#/components/schemas/ClinicalPriority'
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        reasoning:
+          type: string
+    DecisionRequest:
+      type: object
+      required:
+      - priority
+      - professionalId
+      properties:
+        priority:
+          $ref: '#/components/schemas/ClinicalPriority'
+        professionalId:
+          type: string
+          format: uuid
+security:
+- bearerAuth: []

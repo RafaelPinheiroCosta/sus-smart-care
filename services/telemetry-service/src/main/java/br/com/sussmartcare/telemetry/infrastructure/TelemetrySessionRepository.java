@@ -1,0 +1,1 @@
+package br.com.sussmartcare.telemetry.infrastructure; import br.com.sussmartcare.telemetry.domain.*; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface TelemetrySessionRepository extends JpaRepository<TelemetrySession,UUID>{}

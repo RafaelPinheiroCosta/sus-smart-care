@@ -1,0 +1,1 @@
+package br.com.sussmartcare.queue.domain; public enum PresenceState { INSIDE_FACILITY, OUTSIDE_FACILITY, UNKNOWN }

@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientregistry.domain; public enum RelationshipType { SELF, PARENT, LEGAL_GUARDIAN, CAREGIVER, AUTHORIZED_REPRESENTATIVE }

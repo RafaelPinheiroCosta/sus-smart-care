@@ -1,0 +1,1 @@
+package br.com.sussmartcare.triage.infrastructure.projection; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface ProcessedEventRepository extends JpaRepository<ProcessedEvent,UUID>{}

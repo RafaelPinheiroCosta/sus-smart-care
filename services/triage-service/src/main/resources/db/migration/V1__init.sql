@@ -1,0 +1,2 @@
+create table triages(id uuid primary key, visit_id uuid not null unique, status varchar(30) not null, ai_recommendation varchar(30), ai_confidence double precision, ai_reasoning varchar(1000), final_priority varchar(30), decided_by uuid, started_at timestamptz not null, decided_at timestamptz);
+create table outbox_events(id uuid primary key, topic varchar(160) not null, event_key varchar(160) not null, payload varchar(8000) not null, created_at timestamptz not null, published_at timestamptz); create index idx_outbox_pending on outbox_events(published_at,created_at);

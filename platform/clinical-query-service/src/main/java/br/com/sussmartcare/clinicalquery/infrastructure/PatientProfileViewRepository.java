@@ -1,0 +1,1 @@
+package br.com.sussmartcare.clinicalquery.infrastructure; import br.com.sussmartcare.clinicalquery.domain.PatientProfileView; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface PatientProfileViewRepository extends JpaRepository<PatientProfileView,UUID>{}

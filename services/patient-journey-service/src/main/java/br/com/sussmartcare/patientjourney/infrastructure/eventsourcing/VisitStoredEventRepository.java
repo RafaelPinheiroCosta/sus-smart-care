@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientjourney.infrastructure.eventsourcing; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface VisitStoredEventRepository extends JpaRepository<VisitStoredEvent,UUID>{List<VisitStoredEvent> findByStreamIdOrderByEventVersionAsc(UUID streamId);}

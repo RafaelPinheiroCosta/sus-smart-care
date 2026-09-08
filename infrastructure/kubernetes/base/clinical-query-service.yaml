@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: clinical-query-service }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: clinical-query-service } }
+  template:
+    metadata: { labels: { app: clinical-query-service } }
+    spec:
+      containers:
+        - name: clinical-query-service
+          image: REPLACE_ACR/clinical-query-service:0.4.0
+          ports: [{ containerPort: 8090 }]
+          env:
+            - name: KEYCLOAK_ISSUER
+              value: "https://REPLACE_AUTH_HOST/realms/sus-smart-care"
+            - name: KEYCLOAK_JWK_SET_URI
+              value: "http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs"
+            - name: DB_URL
+              value: "jdbc:postgresql://postgres:5432/clinical_query"
+            - name: DB_USER
+              value: "sus"
+            - name: DB_PASSWORD
+              value: "sus"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: OTEL_TRACES_ENDPOINT
+              value: "http://tempo:4318/v1/traces"
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: 8090 }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: 8090 }, initialDelaySeconds: 30, periodSeconds: 20 }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 1000m, memory: 768Mi }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: clinical-query-service }
+spec:
+  selector: { app: clinical-query-service }
+  ports: [{ port: 8090, targetPort: 8090 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: clinical-query-service }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: clinical-query-service }
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }

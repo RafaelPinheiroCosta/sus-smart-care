@@ -1,0 +1,1 @@
+create table if not exists pending_visit_notifications(event_id uuid primary key,visit_id uuid not null,type varchar(60) not null,message varchar(1200) not null,created_at timestamptz not null);create index if not exists idx_pending_notification_visit on pending_visit_notifications(visit_id,created_at);

@@ -1,0 +1,1 @@
+package br.com.sussmartcare.triage.infrastructure.ai; import org.springframework.context.annotation.*; import org.springframework.web.client.RestClient; @Configuration public class AiClientConfig {@Bean RestClient.Builder restClientBuilder(){return RestClient.builder();}}

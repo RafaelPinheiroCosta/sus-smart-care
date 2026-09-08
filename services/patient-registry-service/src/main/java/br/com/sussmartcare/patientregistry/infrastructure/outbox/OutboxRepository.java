@@ -1,0 +1,1 @@
+package br.com.sussmartcare.patientregistry.infrastructure.outbox; import java.time.*; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface OutboxRepository extends JpaRepository<OutboxEvent,UUID>{List<OutboxEvent> findTop100ByPublishedAtIsNullAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(Instant now);}

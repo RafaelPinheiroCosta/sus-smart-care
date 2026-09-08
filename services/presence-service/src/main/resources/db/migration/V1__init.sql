@@ -1,0 +1,2 @@
+create table presence_events(id uuid primary key, visit_id uuid not null, patient_id uuid not null, event_type varchar(60) not null, zone_id varchar(100), source varchar(60) not null, occurred_at timestamptz not null); create index idx_presence_visit on presence_events(visit_id,occurred_at);
+create table outbox_events(id uuid primary key, topic varchar(160) not null, event_key varchar(160) not null, payload varchar(8000) not null, created_at timestamptz not null, published_at timestamptz); create index idx_outbox_pending on outbox_events(published_at,created_at);
