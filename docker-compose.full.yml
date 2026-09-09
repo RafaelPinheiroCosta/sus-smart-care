@@ -270,6 +270,7 @@ services:
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
       OTEL_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+      PATIENT_REGISTRY_URL: http://patient-registry-service:8081
     depends_on:
       postgres:
         condition: service_healthy

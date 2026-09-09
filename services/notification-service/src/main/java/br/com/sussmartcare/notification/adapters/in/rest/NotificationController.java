@@ -1,1 +1,81 @@
-package br.com.sussmartcare.notification.adapters.in.rest; import br.com.sussmartcare.notification.application.*; import br.com.sussmartcare.notification.domain.*; import jakarta.validation.Valid; import jakarta.validation.constraints.*; import java.util.*; import org.springframework.http.*; import org.springframework.web.bind.annotation.*; @RestController @RequestMapping("/api/v1/notifications") public class NotificationController{private final NotificationApplicationService app;public NotificationController(NotificationApplicationService a){app=a;}public record SendRequest(@NotNull UUID patientId,UUID visitId,@NotBlank String type,@NotBlank String channel,@NotBlank String message){}public record PreferenceRequest(@NotNull UUID patientId,boolean hasSmartphone,@NotBlank String preferredChannel,String fallbackChannel){}@PostMapping public ResponseEntity<Notification> send(@Valid @RequestBody SendRequest r){return ResponseEntity.status(202).body(app.send(r.patientId(),r.visitId(),r.type(),r.channel(),r.message()));}@PutMapping("/preferences")public NotificationPreference preference(@Valid @RequestBody PreferenceRequest r){return app.preference(r.patientId(),r.hasSmartphone(),r.preferredChannel(),r.fallbackChannel());}@GetMapping("/patients/{patientId}")public List<Notification> history(@PathVariable UUID patientId){return app.history(patientId);}}
+package br.com.sussmartcare.notification.adapters.in.rest;
+
+import br.com.sussmartcare.notification.application.NotificationAccessApplicationService;
+import br.com.sussmartcare.notification.application.NotificationApplicationService;
+import br.com.sussmartcare.notification.domain.Notification;
+import br.com.sussmartcare.notification.domain.NotificationPreference;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/notifications")
+public class NotificationController {
+
+  private final NotificationApplicationService app;
+  private final NotificationAccessApplicationService access;
+
+  public NotificationController(
+      NotificationApplicationService app,
+      NotificationAccessApplicationService access) {
+
+    this.app = app;
+    this.access = access;
+  }
+
+  public record SendRequest(
+      @NotNull UUID patientId,
+      UUID visitId,
+      @NotBlank String type,
+      @NotBlank String channel,
+      @NotBlank String message) {}
+
+  public record PreferenceRequest(
+      @NotNull UUID patientId,
+      boolean hasSmartphone,
+      @NotBlank String preferredChannel,
+      String fallbackChannel) {}
+
+  @PostMapping
+  public ResponseEntity<Notification> send(
+      @Valid @RequestBody SendRequest request) {
+
+    return ResponseEntity
+        .status(202)
+        .body(
+            app.send(
+                request.patientId(),
+                request.visitId(),
+                request.type(),
+                request.channel(),
+                request.message()));
+  }
+
+  @PutMapping("/preferences")
+  public NotificationPreference preference(
+      @Valid @RequestBody PreferenceRequest request) {
+
+    return access.preference(
+        request.patientId(),
+        request.hasSmartphone(),
+        request.preferredChannel(),
+        request.fallbackChannel());
+  }
+
+  @GetMapping("/patients/{patientId}")
+  public List<Notification> history(
+      @PathVariable UUID patientId) {
+
+    return access.history(patientId);
+  }
+}

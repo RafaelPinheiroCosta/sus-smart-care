@@ -34,3 +34,6 @@ management:
 springdoc.swagger-ui.path: /swagger-ui.html
 management.tracing.sampling.probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
 management.otlp.tracing.endpoint: ${OTEL_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+
+patient-registry:
+  base-url: ${PATIENT_REGISTRY_URL:http://localhost:8081}
