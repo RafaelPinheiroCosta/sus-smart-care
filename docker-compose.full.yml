@@ -100,6 +100,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/patient_registry
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
@@ -121,10 +123,13 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/patient_journey
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
       OTEL_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+      PATIENT_REGISTRY_URL: http://patient-registry-service:8081
     depends_on:
       postgres:
         condition: service_healthy
@@ -142,6 +147,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/triage
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
@@ -163,10 +170,13 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/queue_db
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
       OTEL_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+      PATIENT_JOURNEY_URL: http://patient-journey-service:8082
     depends_on:
       postgres:
         condition: service_healthy
@@ -184,6 +194,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/telemetry
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
@@ -205,6 +217,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/presence
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
@@ -226,6 +240,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/prehospital
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
@@ -247,6 +263,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/notification
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
@@ -268,6 +286,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/identity_access
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
@@ -289,6 +309,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/clinical_query
       DB_USER: sus
       DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs

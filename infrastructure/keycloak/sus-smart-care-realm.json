@@ -49,7 +49,8 @@
                 ],
     "users":  [
                   {
-                      "username":  "demo.admin",
+                      "id": "10d9ac9e-872f-4e70-ac88-e49dad06ec76",
+                      "username": "demo.admin",
                       "enabled":  true,
                       "credentials":  [
                                           {
@@ -70,7 +71,8 @@
                                           ]
                   },
                   {
-                      "username":  "demo.patient",
+                      "id": "826c03ec-93aa-483b-b0ec-4c1e9d25660d",
+                      "username": "demo.patient",
                       "enabled":  true,
                       "credentials":  [
                                           {
@@ -91,7 +93,8 @@
                                           ]
                   },
                   {
-                      "username":  "demo.representative",
+                      "id": "8f7c9933-f5e1-41f8-acc9-a7f31d91611c",
+                      "username": "demo.representative",
                       "enabled":  true,
                       "credentials":  [
                                           {
@@ -112,7 +115,8 @@
                                           ]
                   },
                   {
-                      "username":  "demo.triage",
+                      "id": "71a15e49-2c25-42e8-85b9-52876fb3aeec",
+                      "username": "demo.triage",
                       "enabled":  true,
                       "credentials":  [
                                           {
@@ -133,7 +137,8 @@
                                           ]
                   },
                   {
-                      "username":  "demo.doctor",
+                      "id": "9a393b92-a7d0-40b9-9cbe-d27b1ff89f9b",
+                      "username": "demo.doctor",
                       "enabled":  true,
                       "credentials":  [
                                           {
@@ -154,7 +159,8 @@
                                           ]
                   },
                   {
-                      "username":  "demo.operator",
+                      "id": "403a639f-1849-41bc-8493-8fb9d8d25fbf",
+                      "username": "demo.operator",
                       "enabled":  true,
                       "credentials":  [
                                           {
@@ -175,7 +181,8 @@
                                           ]
                   },
                   {
-                      "username":  "demo.ambulance",
+                      "id": "5317204c-a98b-435c-9c12-a76d6516eb85",
+                      "username": "demo.ambulance",
                       "enabled":  true,
                       "credentials":  [
                                           {
