@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "SUS Smart Care v0.4 - E2E Digital Patient",
+    "name": "SUS Smart Care v0.4.1 - E2E Digital Patient",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -460,7 +460,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"priority\": \"HIGH\", \"professionalId\": \"00000000-0000-0000-0000-000000000001\"}"
+          "raw": "{\"priority\": \"HIGH\"}"
         }
       }
     },

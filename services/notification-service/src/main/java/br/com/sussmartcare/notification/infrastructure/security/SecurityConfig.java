@@ -20,7 +20,6 @@ package br.com.sussmartcare.notification.infrastructure.security;
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/preferences").hasAnyRole("PATIENT","REPRESENTATIVE","OPERATOR","ADMIN")
 .requestMatchers(HttpMethod.GET, "/api/v1/notifications/patients/**").hasAnyRole("PATIENT","REPRESENTATIVE","OPERATOR","DOCTOR","ADMIN")
 .requestMatchers(HttpMethod.POST, "/api/v1/notifications").hasAnyRole("OPERATOR","TRIAGE_NURSE","DOCTOR","ADMIN")
                 .anyRequest().denyAll())

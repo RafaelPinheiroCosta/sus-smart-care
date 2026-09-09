@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Patient Registry API
-  version: 0.4.0
+  version: 0.4.1
   description: Canonical patient identity independent from user accounts and channels.
 servers:
 - url: http://localhost:8080
@@ -216,6 +216,114 @@ paths:
           description: Unauthenticated
         '403':
           description: Forbidden
+  /api/v1/patients/{id}/access:
+    get:
+      operationId: checkPatientAccess
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Access granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientAccessResponse'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientAccessResponse'
+
+  /api/v1/patients/{id}/self-link:
+    post:
+      operationId: linkPatientToOwnUserIdentity
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfLinkRequest'
+      responses:
+        '201':
+          description: SELF relationship created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepresentativeRelationship'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+
+  /api/v1/patients/{patientId}/communication-profile:
+    get:
+      operationId: getPatientCommunicationProfile
+      parameters:
+      - name: patientId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Patient communication profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientCommunicationProfile'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+
+    put:
+      operationId: updatePatientCommunicationProfile
+      parameters:
+      - name: patientId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCommunicationProfileRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientCommunicationProfile'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
   /api/v1/patients/{id}/representatives:
     post:
       operationId: linkRepresentative
@@ -394,6 +502,71 @@ components:
         canonicalPatientId:
           type: string
           format: uuid
+    SelfLinkRequest:
+      type: object
+      required:
+      - userId
+      properties:
+        userId:
+          type: string
+          format: uuid
+
+    PatientAccessResponse:
+      type: object
+      required:
+      - patientId
+      - userId
+      - allowed
+      - reason
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        allowed:
+          type: boolean
+        reason:
+          type: string
+
+    QueueCallMode:
+      type: string
+      enum:
+      - MOBILE
+      - DISPLAY
+      - VERBAL
+      - DISPLAY_AND_VERBAL
+
+    PatientCommunicationProfile:
+      type: object
+      required:
+      - patientId
+      - hasSmartphone
+      - queueCallMode
+      - updatedAt
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        hasSmartphone:
+          type: boolean
+        queueCallMode:
+          $ref: '#/components/schemas/QueueCallMode'
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateCommunicationProfileRequest:
+      type: object
+      required:
+      - hasSmartphone
+      - queueCallMode
+      properties:
+        hasSmartphone:
+          type: boolean
+        queueCallMode:
+          $ref: '#/components/schemas/QueueCallMode'
     LinkRepresentativeRequest:
       type: object
       required:
@@ -406,7 +579,6 @@ components:
         type:
           type: string
           enum:
-          - SELF
           - PARENT
           - LEGAL_GUARDIAN
           - CAREGIVER

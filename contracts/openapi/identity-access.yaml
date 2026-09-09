@@ -1,62 +1,25 @@
 openapi: 3.0.3
 info:
-  title: Identity & Communication Profile API
-  version: 0.4.0
-  description: Keycloak owns authentication; this API stores only application-level
-    communication capabilities/preferences.
+  title: Identity Access API
+  version: 0.4.1
+  description: >
+    Keycloak owns authentication and authorization identities.
+    This service exposes application identity information derived
+    from the authenticated JWT.
 servers:
 - url: http://localhost:8080
   description: API Gateway
 paths:
-  /api/v1/identity/communication-profiles:
-    put:
-      operationId: upsertCommunicationProfile
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommunicationProfileRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommunicationProfile'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Forbidden
-  /api/v1/identity/communication-profiles/{userId}:
+  /api/v1/identity/me:
     get:
-      operationId: getCommunicationProfile
-      parameters:
-      - name: userId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      operationId: getCurrentActor
       responses:
         '200':
-          description: OK
+          description: Current authenticated actor
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommunicationProfile'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
+                $ref: '#/components/schemas/ActorIdentity'
         '401':
           description: Unauthenticated
         '403':
@@ -68,47 +31,18 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    ProblemDetail:
-      type: object
-      properties:
-        type:
-          type: string
-          format: uri
-        title:
-          type: string
-        status:
-          type: integer
-        detail:
-          type: string
-        instance:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        correlationId:
-          type: string
-    CommunicationProfile:
-      type: object
-      properties:
-        userId:
-          type: string
-          format: uuid
-        hasSmartphone:
-          type: boolean
-        preferredChannel:
-          type: string
-    CommunicationProfileRequest:
+    ActorIdentity:
       type: object
       required:
       - userId
-      - preferredChannel
+      - roles
       properties:
         userId:
           type: string
           format: uuid
-        hasSmartphone:
-          type: boolean
-        preferredChannel:
-          type: string
+        roles:
+          type: array
+          items:
+            type: string
 security:
 - bearerAuth: []

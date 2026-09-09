@@ -1,9 +1,11 @@
 openapi: 3.0.3
 info:
   title: Notification API
-  version: 0.4.0
-  description: Channel-adaptive notification routing for smartphone, representative,
-    public display and staff-assisted calling.
+  version: 0.4.1
+  description: >
+    Channel-adaptive notification delivery. Patient communication
+    preferences are projected from Patient Registry events and are
+    not directly writable through this API.
 servers:
 - url: http://localhost:8080
   description: API Gateway
@@ -26,40 +28,11 @@ paths:
                 $ref: '#/components/schemas/Notification'
         '400':
           description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
         '401':
           description: Unauthenticated
         '403':
           description: Forbidden
-  /api/v1/notifications/preferences:
-    put:
-      operationId: upsertPatientNotificationPreference
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PreferenceRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotificationPreference'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Forbidden
+
   /api/v1/notifications/patients/{patientId}:
     get:
       operationId: notificationHistory
@@ -72,7 +45,7 @@ paths:
           format: uuid
       responses:
         '200':
-          description: History
+          description: Notification history
           content:
             application/json:
               schema:
@@ -81,40 +54,19 @@ paths:
                   $ref: '#/components/schemas/Notification'
         '400':
           description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
         '401':
           description: Unauthenticated
         '403':
           description: Forbidden
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
-    ProblemDetail:
-      type: object
-      properties:
-        type:
-          type: string
-          format: uri
-        title:
-          type: string
-        status:
-          type: integer
-        detail:
-          type: string
-        instance:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        correlationId:
-          type: string
     Notification:
       type: object
       properties:
@@ -143,6 +95,7 @@ components:
           type: string
           format: date-time
           nullable: true
+
     SendNotificationRequest:
       type: object
       required:
@@ -157,40 +110,13 @@ components:
         visitId:
           type: string
           format: uuid
+          nullable: true
         type:
           type: string
         channel:
           type: string
         message:
           type: string
-    PreferenceRequest:
-      type: object
-      required:
-      - patientId
-      - preferredChannel
-      properties:
-        patientId:
-          type: string
-          format: uuid
-        hasSmartphone:
-          type: boolean
-        preferredChannel:
-          type: string
-        fallbackChannel:
-          type: string
-          nullable: true
-    NotificationPreference:
-      type: object
-      properties:
-        patientId:
-          type: string
-          format: uuid
-        hasSmartphone:
-          type: boolean
-        preferredChannel:
-          type: string
-        fallbackChannel:
-          type: string
-          nullable: true
+
 security:
 - bearerAuth: []

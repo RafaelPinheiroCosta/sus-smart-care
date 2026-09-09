@@ -1,7 +1,7 @@
 asyncapi: 3.0.0
 info:
   title: SUS Smart Care Integration Events
-  version: 0.4.0
+  version: 0.4.1
   description: >-
     Versioned integration-event catalog for the event-driven platform. Kafka is
     the transport; the envelope carries identity, correlation and schema version.
@@ -11,6 +11,7 @@ channels:
   patientProvisionalCreated: { address: patient-provisional-created, messages: { event: { $ref: '#/components/messages/PatientProfile' } } }
   patientIdentityResolved: { address: patient-identity-resolved, messages: { event: { $ref: '#/components/messages/PatientProfile' } } }
   patientProfileUpdated: { address: patient-profile-updated, messages: { event: { $ref: '#/components/messages/PatientProfile' } } }
+  patientCommunicationProfileUpdated: { address: patient-communication-profile-updated, messages: { event: { $ref: '#/components/messages/PatientCommunicationProfileUpdated' } } }
   patientRecordsMerged: { address: patient-records-merged, messages: { event: { $ref: '#/components/messages/PatientMerged' } } }
   preVisitCreated: { address: pre-visit-created, messages: { event: { $ref: '#/components/messages/PreVisitCreated' } } }
   preAnamnesisRecorded: { address: pre-anamnesis-recorded, messages: { event: { $ref: '#/components/messages/PreAnamnesisRecorded' } } }
@@ -30,6 +31,7 @@ components:
     GenericIntegrationEvent: { payload: { $ref: '#/components/schemas/IntegrationEventEnvelope' } }
     PatientRegistered: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PatientProfileData' } } } ] } }
     PatientProfile: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PatientProfileData' } } } ] } }
+    PatientCommunicationProfileUpdated: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PatientCommunicationProfileData' } } } ] } }
     PatientMerged: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PatientMergedData' } } } ] } }
     PreVisitCreated: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PreVisitCreatedData' } } } ] } }
     PreAnamnesisRecorded: { payload: { allOf: [ { $ref: '#/components/schemas/IntegrationEventEnvelope' }, { type: object, properties: { data: { $ref: '#/components/schemas/PreAnamnesisData' } } } ] } }
@@ -63,6 +65,16 @@ components:
         identityStatus: { type: string }
         mergedIntoPatientId: { type: [string, 'null'], format: uuid }
         updatedAt: { type: string, format: date-time }
+    PatientCommunicationProfileData:
+      type: object
+      required: [patientId, hasSmartphone, queueCallMode, updatedAt]
+      properties:
+        patientId: { type: string, format: uuid }
+        hasSmartphone: { type: boolean }
+        queueCallMode:
+          type: string
+          enum: [MOBILE, DISPLAY, VERBAL, DISPLAY_AND_VERBAL]
+        updatedAt: { type: string, format: date-time }
     PatientMergedData:
       type: object
       required: [sourcePatientId, canonicalPatientId, occurredAt]
@@ -94,12 +106,11 @@ components:
         checkedInAt: { type: string, format: date-time }
     BiometricObservationData:
       type: object
-      required: [patientId, type, value, measuredAt]
+      required: [observationId, patientId, type, value, measuredAt, sourceContext]
       properties:
+        observationId: { type: string, format: uuid }
         patientId: { type: string, format: uuid }
         visitId: { type: [string, 'null'], format: uuid }
-        preHospitalEncounterId: { type: [string, 'null'], format: uuid }
-        deviceId: { type: string, format: uuid }
         type: { type: string }
         value: { type: number }
         unit: { type: [string, 'null'] }

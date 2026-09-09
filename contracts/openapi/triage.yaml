@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Triage API
-  version: 0.4.0
+  version: 0.4.1
   description: Human-in-the-loop clinical triage. AI is decision support and never
     the authoritative priority.
 servers:
@@ -274,12 +274,8 @@ components:
       type: object
       required:
       - priority
-      - professionalId
       properties:
         priority:
           $ref: '#/components/schemas/ClinicalPriority'
-        professionalId:
-          type: string
-          format: uuid
 security:
 - bearerAuth: []

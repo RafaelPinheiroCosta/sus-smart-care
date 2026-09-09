@@ -8,6 +8,9 @@ import java.time.Instant;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -93,6 +96,44 @@ public class ApiExceptionHandler {
     return detail;
   }
 
+  @ExceptionHandler(NoResourceFoundException.class)
+  ProblemDetail notFound(
+      NoResourceFoundException exception,
+      HttpServletRequest request) {
+
+    return problem(
+        HttpStatus.NOT_FOUND,
+        "Recurso nao encontrado",
+        "not-found",
+        "Rota ou recurso nao encontrado",
+        request);
+  }
+
+  @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+  ProblemDetail methodNotAllowed(
+      HttpRequestMethodNotSupportedException exception,
+      HttpServletRequest request) {
+
+    return problem(
+        HttpStatus.METHOD_NOT_ALLOWED,
+        "Metodo nao permitido",
+        "method-not-allowed",
+        "Metodo HTTP nao permitido para este recurso",
+        request);
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  ProblemDetail unreadable(
+      HttpMessageNotReadableException exception,
+      HttpServletRequest request) {
+
+    return problem(
+        HttpStatus.BAD_REQUEST,
+        "Requisicao invalida",
+        "malformed-json",
+        "Corpo JSON ausente ou invalido",
+        request);
+  }
   @ExceptionHandler(Exception.class)
   ProblemDetail unexpected(
       Exception exception,
