@@ -40,7 +40,12 @@ public class PatientCommunicationProfileController {
   @PutMapping
   public PatientCommunicationProfile upsert(
       @PathVariable UUID patientId,
-      @Valid @RequestBody UpdateCommunicationProfileRequest request) {
+      @Valid @RequestBody UpdateCommunicationProfileRequest request,
+      JwtAuthenticationToken authentication) {
+
+    assertAccess(
+        patientId,
+        authentication);
 
     return app.upsert(
         patientId,
@@ -53,6 +58,17 @@ public class PatientCommunicationProfileController {
       @PathVariable UUID patientId,
       JwtAuthenticationToken authentication) {
 
+    assertAccess(
+        patientId,
+        authentication);
+
+    return app.get(patientId);
+  }
+
+  private void assertAccess(
+      UUID patientId,
+      JwtAuthenticationToken authentication) {
+
     UUID userId =
         UUID.fromString(
             authentication
@@ -63,18 +79,11 @@ public class PatientCommunicationProfileController {
         authentication
             .getAuthorities()
             .stream()
-            .map(
-                authority ->
-                    authority.getAuthority())
-            .filter(
-                authority ->
-                    authority.startsWith("ROLE_"))
-            .map(
-                authority ->
-                    authority.substring(
-                        "ROLE_".length()))
-            .collect(
-                Collectors.toSet());
+            .map(authority -> authority.getAuthority())
+            .filter(authority -> authority.startsWith("ROLE_"))
+            .map(authority ->
+                authority.substring("ROLE_".length()))
+            .collect(Collectors.toSet());
 
     var decision =
         access.decide(
@@ -86,7 +95,5 @@ public class PatientCommunicationProfileController {
       throw new PatientAccessDeniedException(
           "Usuario nao possui vinculo ativo com o paciente");
     }
-
-    return app.get(patientId);
   }
 }

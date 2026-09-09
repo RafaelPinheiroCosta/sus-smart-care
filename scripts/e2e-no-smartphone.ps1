@@ -6,7 +6,7 @@ function Api($m,$path,$body=$null){$h=@{Authorization="Bearer $token";"X-Correla
 function Poll($path){for($i=0;$i-lt 30;$i++){try{return Api Get $path}catch{if([int]$_.Exception.Response.StatusCode-ne404){throw};Start-Sleep 1}};throw "timeout $path"}
 $facility=[guid]::NewGuid()
 $patient=Api Post "/api/v1/patients" @{fullName="Paciente sem smartphone";identifierType="CNS";identifierValue="700000000000001"}
-Api Put "/api/v1/notifications/preferences" @{patientId=$patient.id;hasSmartphone=$false;preferredChannel="PUBLIC_DISPLAY";fallbackChannel="STAFF_CONSOLE"}|Out-Null
+Api Put "/api/v1/patients/$($patient.id)/communication-profile" @{hasSmartphone=$false;queueCallMode="DISPLAY_AND_VERBAL"}|Out-Null
 $visit=Api Post "/api/v1/pre-visits" @{patientId=$patient.id;facilityId=$facility;channel="RECEPTION"}
 Api Post "/api/v1/pre-visits/$($visit.id)/check-in"|Out-Null
 $triage=Poll "/api/v1/triages/by-visit/$($visit.id)"

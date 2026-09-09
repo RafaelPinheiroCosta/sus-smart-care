@@ -50,6 +50,8 @@ public class SecurityConfig {
                         HttpMethod.PUT,
                         "/api/v1/patients/*/communication-profile")
                     .hasAnyRole(
+                        "PATIENT",
+                        "REPRESENTATIVE",
                         "OPERATOR",
                         "ADMIN")
 

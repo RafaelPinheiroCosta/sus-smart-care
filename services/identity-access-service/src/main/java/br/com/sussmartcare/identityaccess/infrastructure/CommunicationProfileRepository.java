@@ -1,1 +1,0 @@
-package br.com.sussmartcare.identityaccess.infrastructure; import br.com.sussmartcare.identityaccess.domain.*; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface CommunicationProfileRepository extends JpaRepository<CommunicationProfile,UUID>{}

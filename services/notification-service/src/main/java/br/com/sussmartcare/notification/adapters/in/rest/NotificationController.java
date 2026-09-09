@@ -3,7 +3,6 @@ package br.com.sussmartcare.notification.adapters.in.rest;
 import br.com.sussmartcare.notification.application.NotificationAccessApplicationService;
 import br.com.sussmartcare.notification.application.NotificationApplicationService;
 import br.com.sussmartcare.notification.domain.Notification;
-import br.com.sussmartcare.notification.domain.NotificationPreference;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,12 +38,6 @@ public class NotificationController {
       @NotBlank String channel,
       @NotBlank String message) {}
 
-  public record PreferenceRequest(
-      @NotNull UUID patientId,
-      boolean hasSmartphone,
-      @NotBlank String preferredChannel,
-      String fallbackChannel) {}
-
   @PostMapping
   public ResponseEntity<Notification> send(
       @Valid @RequestBody SendRequest request) {
@@ -59,17 +51,6 @@ public class NotificationController {
                 request.type(),
                 request.channel(),
                 request.message()));
-  }
-
-  @PutMapping("/preferences")
-  public NotificationPreference preference(
-      @Valid @RequestBody PreferenceRequest request) {
-
-    return access.preference(
-        request.patientId(),
-        request.hasSmartphone(),
-        request.preferredChannel(),
-        request.fallbackChannel());
   }
 
   @GetMapping("/patients/{patientId}")
