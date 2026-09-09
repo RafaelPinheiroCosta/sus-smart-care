@@ -1,77 +1,180 @@
-# SUS Smart Care — v0.4
+# SUS Smart Care - v0.4.1
 
-Backend/arquitetura de uma plataforma inteligente de jornada do paciente para o SUS. O projeto é **digital-first, not digital-only**: smartphone e pré-cadastro reduzem atrito, mas nunca criam prioridade clínica nem condicionam o direito ao atendimento.
+Backend e arquitetura de uma plataforma inteligente para a jornada do paciente no SUS.
+
+O projeto segue o principio digital-first, not digital-only: smartphone, pre-cadastro e automacoes reduzem atrito, mas nunca condicionam o direito ao atendimento nem definem prioridade clinica.
 
 ## Jornada coberta
-1. consulta prévia da unidade/fila estimada;
-2. paciente, responsável, totem, recepção ou ambulância cria/localiza o `Patient` canônico;
-3. pré-visita e pré-anamnese antes da chegada quando possível;
+
+1. consulta previa da unidade e estimativa de fila;
+2. paciente, responsavel, totem, recepcao ou ambulancia cria ou localiza o Patient canonico;
+3. pre-visita e pre-anamnese antes da chegada quando possivel;
 4. check-in presencial;
-5. triagem + telemetria biométrica normalizada;
-6. regras/IA como apoio e decisão final humana;
-7. entrada automática na fila segundo prioridade clínica;
-8. presença/saída/retorno e tolerância operacional;
-9. View Data específica para médico/paciente/telão;
-10. fluxo pré-hospitalar com ambulância, ETA e telemetria antes da chegada.
+5. triagem e telemetria biometrica normalizada;
+6. regras e IA como apoio a decisao;
+7. decisao final de prioridade confirmada por profissional autenticado;
+8. entrada na fila segundo prioridade clinica;
+9. presenca, saida, retorno e tolerancia operacional;
+10. notificacoes adaptadas ao perfil de comunicacao;
+11. View Data consolidada para consumo clinico;
+12. fluxo pre-hospitalar com ambulancia, ETA e telemetria antes da chegada.
 
 ## Bounded contexts
-`Identity & Access`, `Patient Registry`, `Patient Journey`, `Triage`, `Telemetry & Device Integration`, `Queue Management`, `Presence`, `Pre-Hospital` e `Notification`. `Clinical Query Service` é o read side técnico de CQRS, não um novo domínio de negócio.
+
+A plataforma possui os seguintes contextos de negocio:
+
+- Identity & Access
+- Patient Registry
+- Patient Journey
+- Triage
+- Telemetry & Device Integration
+- Queue Management
+- Presence
+- Pre-Hospital
+- Notification
+
+O Clinical Query Service funciona como read side tecnico de CQRS e nao representa um novo dominio de negocio.
+
+O Facility Service esta planejado para a proxima etapa evolutiva e ainda nao pertence a v0.4.1.
 
 ## Stack
-Java 21, Spring Boot 3, Spring Cloud Gateway, Spring Security OAuth2/OIDC/JWT, PostgreSQL/Flyway, Kafka, Redis, Event Sourcing seletivo, Resilience4j, OpenAPI/AsyncAPI, Micrometer/OpenTelemetry, Prometheus/Tempo/Grafana, Docker, Kubernetes/Bicep preparados, JUnit/Testcontainers/ArchUnit/k6 e GitHub Actions.
 
-## Regras de domínio invariantes
-- `Patient != UserAccount`; histórico clínico pertence ao paciente.
-- responsável/tutor é vínculo temporal/revogável, não proprietário do histórico.
-- paciente pode existir sem conta, documento confirmado ou smartphone.
-- pré-cadastro/canal de entrada não altera prioridade.
-- sair/atrasar pode alterar posição operacional/readiness, nunca prioridade clínica automaticamente.
-- telemetria pré-hospitalar antecipa preparação e avaliação, mas não substitui validação clínica.
-- IA é apoio versionado/explicável e falha de IA não pode bloquear triagem humana.
+Java 21, Spring Boot 3, Spring Cloud Gateway, Spring Security OAuth2/OIDC/JWT, PostgreSQL, Flyway, Kafka, Redis, Event Sourcing seletivo, Resilience4j, OpenAPI, AsyncAPI, Micrometer, OpenTelemetry, Prometheus, Tempo, Grafana, Docker, JUnit, Testcontainers, ArchUnit, k6 e GitHub Actions.
 
-## Executar apenas a infraestrutura
-```bash
+## Regras de dominio invariantes
+
+- Patient != UserAccount.
+- O historico clinico pertence ao paciente.
+- Responsavel, tutor ou familiar autorizado e vinculo temporal e revogavel.
+- Um paciente pode existir sem conta, documento confirmado ou smartphone.
+- Canal de entrada e pre-cadastro nao alteram prioridade clinica.
+- Saida ou atraso podem alterar readiness ou posicao operacional, mas nunca a prioridade clinica automaticamente.
+- Telemetria pre-hospitalar antecipa preparacao e avaliacao, mas nao substitui validacao profissional.
+- IA e apoio a decisao e falha de IA nao pode bloquear triagem humana.
+- A prioridade clinica final e uma decisao humana auditavel.
+- O identificador do profissional que confirma a prioridade vem do sub do JWT autenticado e nao do corpo enviado pelo cliente.
+
+## Ownership de dados
+
+A v0.4.1 explicita a responsabilidade de cada contexto:
+
+- Patient Registry: paciente canonico, identificadores, vinculos de representacao e perfil de comunicacao.
+- Identity & Access / Keycloak: usuarios, autenticacao, papeis e identidade do ator autenticado.
+- Patient Journey: ciclo da visita do paciente.
+- Triage: avaliacao e prioridade clinica.
+- Queue: ordenacao e estado da fila.
+- Presence: presenca fisica e eventos de localizacao.
+- Telemetry: dispositivos, sessoes e observacoes biometricas.
+- Pre-Hospital: atendimento pre-hospitalar.
+- Notification: entrega de notificacoes e projecao local das preferencias de comunicacao.
+- Clinical Query: visao consolidada para leitura.
+
+O perfil de comunicacao possui uma unica fonte de verdade no Patient Registry.
+
+O Notification recebe patient-communication-profile-updated por Kafka e mantem apenas uma projecao para decisao de canal.
+
+## Seguranca
+
+A plataforma combina dois niveis de autorizacao:
+
+1. coarse-grained authorization, baseada nas roles do JWT;
+2. fine-grained authorization, baseada no recurso e no vinculo do usuario com o paciente ou visita.
+
+Os principais fluxos protegidos incluem:
+
+- acesso a paciente por vinculo SELF ou representacao ativa;
+- leitura e alteracao de recursos de fila vinculados a visita;
+- eventos e historico de Presence vinculados a visita;
+- historico de Notification vinculado ao paciente;
+- alteracao do perfil de comunicacao somente por ator autorizado;
+- decisao clinica atribuida ao profissional autenticado pelo JWT.
+
+As visualizacoes publicas de fila permanecem anonimizadas e nao exigem acesso ao prontuario.
+
+## Executar infraestrutura
+
+Comando:
+
 docker compose up -d
-```
-Depois execute os módulos pela IDE/Maven.
 
 ## Executar stack completa
-É necessário gerar os JARs primeiro:
-```powershell
+
+Primeiro gere os JARs e entao execute no PowerShell:
+
 .\scripts\run-full-stack.ps1
-```
-ou:
-```bash
+
+Ou no Bash:
+
 ./scripts/run-full-stack.sh
-```
 
-Gateway `http://localhost:8080`, Keycloak `http://localhost:8180`, Grafana `http://localhost:3000`.
+Principais acessos locais:
 
-## Usuários locais de demonstração
-- `demo.admin / admin123`
-- `demo.patient / demo123`
-- `demo.representative / demo123`
-- `demo.triage / demo123`
-- `demo.doctor / demo123`
-- `demo.operator / demo123`
-- `demo.ambulance / demo123`
+- API Gateway: http://localhost:8080
+- Keycloak: http://localhost:8180
+- Grafana: http://localhost:3000
 
-O client M2M `device-client` usa `client_credentials` e secret `device-secret` **somente no ambiente local de demonstração**.
+## Usuarios locais de demonstracao
+
+- demo.admin / admin123
+- demo.patient / demo123
+- demo.representative / demo123
+- demo.triage / demo123
+- demo.doctor / demo123
+- demo.operator / demo123
+- demo.ambulance / demo123
+
+O client M2M device-client usa client_credentials e o secret device-secret somente no ambiente local de demonstracao.
 
 ## E2E
-Com a stack completa em execução:
-```powershell
+
+Com a stack completa em execucao, execute:
+
 .\scripts\e2e-demo.ps1
-```
-O script percorre `Patient → PreVisit → CheckIn → Triage → Telemetry → AI boundary → decisão humana → Queue → Presence → ClinicalPatientView` e faz polling das projeções eventualmente consistentes.
+
+Tambem existem cenarios especificos para representacao e paciente sem smartphone.
+
+Os scripts utilizam polling quando dependem de projecoes e consistencia eventual.
 
 ## Contratos
-- `contracts/openapi/*.yaml`: boundaries HTTP.
-- `contracts/asyncapi/platform-events.yaml`: tópicos/eventos Kafka.
-- `contracts/README.md`: política de evolução.
 
-## Segurança clínica
-`AI_PROVIDER=demo` não é modelo médico. Ele prova somente o boundary arquitetural. Qualquer uso clínico real exige protocolo institucional, validação do modelo, governança e supervisão profissional.
+- contracts/openapi/*.yaml: boundaries HTTP.
+- contracts/asyncapi/platform-events.yaml: catalogo de eventos Kafka.
+- contracts/README.md: politica de evolucao.
 
-## Estado
-Veja `architecture/implementation-status.md` e `docs/validation-v0.4.md`. Esta versão foi validada estruturalmente, mas o ambiente de geração não possui Maven/Docker para afirmar `mvn verify`/full-stack verdes.
+Na v0.4.1 os contratos foram realinhados com o runtime, incluindo:
+
+- identidade do profissional derivada do JWT;
+- perfil de comunicacao no Patient Registry;
+- remocao da escrita direta de preferencias no Notification;
+- endpoint /identity/me;
+- eventos de atualizacao do perfil de comunicacao.
+
+## Seguranca clinica
+
+AI_PROVIDER=demo nao representa um modelo medico validado.
+
+Ele demonstra somente o boundary arquitetural para apoio a decisao. Uso clinico real exige protocolo institucional, validacao de modelo, governanca, auditoria e supervisao profissional.
+
+## Estado da v0.4.1
+
+As etapas incrementais de estabilizacao 0.1 a 0.8 foram executadas e validadas localmente com Maven, Docker, Keycloak, PostgreSQL e Kafka.
+
+Entre as correcoes ja validadas estao:
+
+- CI alinhado a branch correta;
+- E2E de representacao atualizado;
+- BOLA/IDOR corrigido em Queue;
+- BOLA corrigido em Presence;
+- BOLA corrigido em Notification;
+- identidade profissional de Triage derivada do JWT;
+- ownership de comunicacao centralizado no Patient Registry;
+- projecao Registry -> Kafka -> Notification validada em runtime;
+- contratos OpenAPI/AsyncAPI alinhados;
+- semantica HTTP corrigida para 400, 403, 404 e 405 nos pontos ajustados.
+
+A regressao completa da v0.4.1 ainda sera executada na etapa 0.10 antes da promocao desta baseline para a proxima fase funcional.
+
+Veja tambem:
+
+- architecture/implementation-status.md
+- docs/validation-v0.4.1.md
