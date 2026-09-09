@@ -33,7 +33,6 @@ $tokenResponse = Invoke-RestMethod -Method Post -Uri "$KeycloakUrl/realms/sus-sm
 $script:Token = $tokenResponse.access_token
 
 $facilityId = [guid]::NewGuid()
-$professionalId = [guid]::NewGuid()
 $cpf = "9" + (Get-Random -Minimum 1000000000 -Maximum 1999999999)
 
 Write-Host "2/12 Registrando paciente canônico..."
@@ -63,7 +62,7 @@ Write-Host "7/12 Executando boundary de IA (provider demo seguro)..."
 $triage = Invoke-Api Post "/api/v1/triages/$triageId/assessment/ai"
 
 Write-Host "8/12 Confirmando prioridade por profissional..."
-$triage = Invoke-Api Post "/api/v1/triages/$triageId/decision" @{ priority="HIGH"; professionalId=$professionalId }
+$triage = Invoke-Api Post "/api/v1/triages/$triageId/decision" @{ priority="HIGH" }
 
 Write-Host "9/12 Aguardando entrada automática na fila..."
 $queueEntry = Poll "fila criada por clinical-priority-confirmed" { Invoke-Api Get "/api/v1/queue-entries/by-visit/$visitId" $null $true }
