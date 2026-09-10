@@ -133,20 +133,41 @@ Durante a estabilizacao foram executados:
 - validacao de projecao no Notification;
 - checagem de restart count dos containers.
 
-## Pendente para encerramento da v0.4.1
+## Encerramento da v0.4.1
 
-A etapa 0.10 ainda deve executar a regressao integral apos todas as mudancas:
+A regressao integral da v0.4.1 foi concluida.
 
-- mvn clean verify;
-- validacao da stack completa;
-- health de todos os servicos;
-- E2E digital;
-- E2E representacao;
-- E2E paciente sem smartphone;
-- validacao de que nao houve regressao entre os servicos.
+A validacao final incluiu:
 
-Somente apos essa regressao a v0.4.1 sera considerada baseline estavel para inicio da proxima etapa funcional.
+- reactor Maven completo;
+- Testcontainers com PostgreSQL real;
+- testes unitarios;
+- testes de autorizacao;
+- ArchUnit;
+- stack Docker completa;
+- health dos 11 deployables;
+- validacao de restart count dos containers;
+- E2E principal;
+- E2E de representacao;
+- E2E de paciente sem smartphone.
 
+Durante a regressao da stack foi identificado um defeito de composicao no Queue Service.
+
+QueueController dependia de QueueAccessApplicationService, mas a classe nao estava registrada como bean Spring.
+
+A classe foi corrigida com @Service.
+
+Depois da correcao:
+
+- os 7 testes do Queue passaram;
+- a anotacao foi confirmada no bytecode compilado;
+- a imagem Docker do Queue foi reconstruida;
+- o container permaneceu healthy;
+- RestartCount permaneceu em zero;
+- os E2Es passaram;
+- o reactor Maven completo voltou a passar.
+
+A v0.4.1 esta, portanto, encerrada como baseline estavel para inicio do Stage 1.
 ## Ainda fora do escopo validado
 
 - modelo de IA clinicamente validado;

@@ -1,30 +1,35 @@
 # Proximas acoes - v0.4.1
 
-A etapa de estabilizacao esta proxima do encerramento.
+A etapa de estabilizacao da v0.4.1 foi encerrada.
 
-As etapas 0.1 a 0.8 foram concluidas.
+## Baseline atual
 
-## Etapa atual
+A v0.4.1 esta validada como baseline estavel.
 
-### 0.9 - documentacao
+Foram concluidas as etapas:
 
-Atualizar documentacao para refletir o estado real da implementacao e remover afirmacoes herdadas da baseline v0.4.
+- 0.1 CI;
+- 0.2 E2E representation;
+- 0.3 Queue authorization;
+- 0.4 Presence authorization;
+- 0.5 Notification authorization;
+- 0.6 Triage professional identity;
+- 0.7 communication profile ownership;
+- 0.8 contracts and HTTP semantics;
+- 0.9 documentation;
+- 0.10 full regression.
 
-### 0.10 - regressao completa
+A regressao final confirmou:
 
-Executar:
+- Maven reactor completo verde;
+- stack completa operacional;
+- 11 health checks HTTP 200;
+- containers sem restart inesperado;
+- E2E principal verde;
+- E2E de representacao verde;
+- E2E sem smartphone verde.
 
-1. mvn clean verify;
-2. validar docker compose -f docker-compose.full.yml;
-3. confirmar health de todos os deployables;
-4. executar o E2E principal;
-5. executar o cenario de representacao;
-6. executar o cenario de paciente sem smartphone;
-7. verificar containers sem restart inesperado;
-8. registrar a evidencia final em docs/validation-v0.4.1.md.
-
-A v0.4.1 somente sera considerada encerrada depois dessa regressao.
-
+O proximo trabalho funcional passa a ser o Stage 1.
 ## Proxima fase funcional
 
 Depois da v0.4.1 estavel, iniciar o Stage 1.

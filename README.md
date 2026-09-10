@@ -172,7 +172,19 @@ Entre as correcoes ja validadas estao:
 - contratos OpenAPI/AsyncAPI alinhados;
 - semantica HTTP corrigida para 400, 403, 404 e 405 nos pontos ajustados.
 
-A regressao completa da v0.4.1 ainda sera executada na etapa 0.10 antes da promocao desta baseline para a proxima fase funcional.
+A regressao completa da v0.4.1 foi concluida com sucesso.
+
+A validacao final confirmou:
+
+- reactor Maven completo com os 12 modulos em SUCCESS;
+- 11 deployables respondendo HTTP 200 nos health checks;
+- todos os containers da stack sem restart inesperado;
+- E2E principal concluido;
+- E2E de representacao concluido;
+- E2E de paciente sem smartphone concluido;
+- Queue Service estabilizado apos registro correto de QueueAccessApplicationService como Spring Service.
+
+A v0.4.1 passa a ser a baseline estavel para a proxima evolucao funcional.
 
 Veja tambem:
 

@@ -2,7 +2,9 @@ package br.com.sussmartcare.queue.application;
 
 import br.com.sussmartcare.queue.domain.QueueEntry;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
+@Service
 public class QueueAccessApplicationService {
 
   private final QueueApplicationService queueApplicationService;
