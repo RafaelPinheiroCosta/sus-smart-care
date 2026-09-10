@@ -1,5 +1,15 @@
 name: sus-smart-care-full
 services:
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    ports:
+      - 1883:1883
+    volumes:
+      - ./infrastructure/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./infrastructure/mosquitto/password_file:/mosquitto/config/password_file:ro
+    restart: unless-stopped
+
   postgres:
     image: postgres:17-alpine
     environment:
@@ -200,6 +210,11 @@ services:
       KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
       OTEL_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+      MQTT_ENABLED: "true"
+      MQTT_BROKER_URI: tcp://mosquitto:1883
+      MQTT_USERNAME: device-demo
+      MQTT_PASSWORD: device-demo-secret
+      MQTT_CLIENT_ID: telemetry-service
     depends_on:
       postgres:
         condition: service_healthy

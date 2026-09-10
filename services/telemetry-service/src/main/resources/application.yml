@@ -23,3 +23,10 @@ springdoc.swagger-ui.path: /swagger-ui.html
 
 management.tracing.sampling.probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
 management.otlp.tracing.endpoint: ${OTEL_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+
+mqtt:
+  enabled: ${MQTT_ENABLED:false}
+  broker-uri: ${MQTT_BROKER_URI:tcp://localhost:1883}
+  username: ${MQTT_USERNAME:device-demo}
+  password: ${MQTT_PASSWORD:device-demo-secret}
+  client-id: ${MQTT_CLIENT_ID:telemetry-service}

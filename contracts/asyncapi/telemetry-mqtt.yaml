@@ -1,0 +1,111 @@
+asyncapi: 3.0.0
+
+info:
+  title: SUS Smart Care - Medical Device MQTT
+  version: 0.5.0
+  description: >
+    MQTT transport used by medical devices to submit biometric telemetry.
+    Patient and clinical-session identifiers are deliberately excluded from
+    the device payload. The platform resolves them from the active device
+    assignment.
+
+servers:
+  localMosquitto:
+    host: localhost:1883
+    protocol: mqtt
+    description: Local development broker
+
+channels:
+
+  deviceTelemetry:
+    address: sus/v1/devices/{deviceExternalId}/telemetry
+    parameters:
+      deviceExternalId:
+        description: Registered MedicalDevice external identifier
+    messages:
+      telemetry:
+        $ref: '#/components/messages/Telemetry'
+
+  deviceAck:
+    address: sus/v1/devices/{deviceExternalId}/ack
+    parameters:
+      deviceExternalId:
+        description: Registered MedicalDevice external identifier
+    messages:
+      acknowledgement:
+        $ref: '#/components/messages/Acknowledgement'
+
+operations:
+
+  receiveTelemetry:
+    action: receive
+    channel:
+      $ref: '#/channels/deviceTelemetry'
+    messages:
+      - $ref: '#/channels/deviceTelemetry/messages/telemetry'
+
+  sendAcknowledgement:
+    action: send
+    channel:
+      $ref: '#/channels/deviceAck'
+    messages:
+      - $ref: '#/channels/deviceAck/messages/acknowledgement'
+
+components:
+
+  messages:
+
+    Telemetry:
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - messageId
+          - sequence
+          - type
+          - value
+        properties:
+          messageId:
+            type: string
+            format: uuid
+          sequence:
+            type: integer
+            format: int64
+            minimum: 0
+          type:
+            type: string
+            examples:
+              - HEART_RATE
+              - SPO2
+              - TEMPERATURE
+          value:
+            type: number
+          unit:
+            type: string
+          measuredAt:
+            type: string
+            format: date-time
+
+    Acknowledgement:
+      payload:
+        type: object
+        properties:
+          messageId:
+            type: string
+            format: uuid
+            nullable: true
+          sequence:
+            type: integer
+            format: int64
+          status:
+            type: string
+            enum:
+              - ACCEPTED
+              - DUPLICATE
+              - REJECTED
+          receivedAt:
+            type: string
+            format: date-time
+          reason:
+            type: string
+            nullable: true

@@ -67,3 +67,4 @@ effective-pom*.xml
 
 # Local backup files
 *.bak
+infrastructure/mosquitto/password_file
