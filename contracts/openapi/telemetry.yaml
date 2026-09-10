@@ -2,7 +2,7 @@ openapi: 3.0.3
 
 info:
   title: SUS Smart Care - Telemetry and Device API
-  version: 0.5.0
+  version: 0.6.0
   description: >
     Medical device inventory, temporal placement, patient-session assignment
     and biometric telemetry boundary.
@@ -190,3 +190,27 @@ components:
 
     BiometricObservation:
       type: object
+
+# Stage 5 processing semantics:
+# SPOT persists each biometric observation.
+# CONTINUOUS keeps a rolling Redis window and persists aggregates.
+# Normal continuous samples do not emit one Kafka event per sample.
+# Anomalies are persisted and emitted immediately.
+
+x-telemetry-processing:
+  modes:
+    SPOT:
+      rawPersistence: true
+      immediateObservationEvent: true
+    CONTINUOUS:
+      rawPersistence: false
+      redisRollingWindow: true
+      aggregatePersistence: true
+      aggregateEventEverySamples: 10
+      immediateAnomalyEvent: true
+
+x-stage5-operations:
+  getTelemetryAggregates:
+    path: /api/v1/telemetry/sessions/{sessionId}/aggregates
+  getTelemetryAnomalies:
+    path: /api/v1/telemetry/sessions/{sessionId}/anomalies

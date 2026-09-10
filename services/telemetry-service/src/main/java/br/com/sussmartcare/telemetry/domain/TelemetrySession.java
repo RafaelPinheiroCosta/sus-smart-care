@@ -23,13 +23,18 @@ public class TelemetrySession {
   @Column(name = "source_context", nullable = false, length = 60)
   private String sourceContext;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "mode", nullable = false, length = 20)
+  private TelemetryMode mode;
+
   @Column(name = "started_at", nullable = false, updatable = false)
   private Instant startedAt;
 
   @Column(name = "ended_at")
   private Instant endedAt;
 
-  protected TelemetrySession() {}
+  protected TelemetrySession() {
+  }
 
   public TelemetrySession(
       UUID patientId,
@@ -37,26 +42,53 @@ public class TelemetrySession {
       UUID preHospitalEncounterId,
       String sourceContext) {
 
+    this(
+        patientId,
+        visitId,
+        preHospitalEncounterId,
+        sourceContext,
+        TelemetryMode.SPOT);
+  }
+
+  public TelemetrySession(
+      UUID patientId,
+      UUID visitId,
+      UUID preHospitalEncounterId,
+      String sourceContext,
+      TelemetryMode mode) {
+
     if (patientId == null) {
-      throw new IllegalArgumentException("Patient id is required");
+      throw new IllegalArgumentException(
+          "Patient id is required");
     }
 
-    if (sourceContext == null || sourceContext.trim().isEmpty()) {
-      throw new IllegalArgumentException("Source context is required");
+    if (sourceContext == null ||
+        sourceContext.trim().isEmpty()) {
+
+      throw new IllegalArgumentException(
+          "Source context is required");
     }
 
     this.id = UUID.randomUUID();
     this.patientId = patientId;
     this.visitId = visitId;
     this.preHospitalEncounterId = preHospitalEncounterId;
-    this.sourceContext = sourceContext.trim().toUpperCase();
+    this.sourceContext =
+        sourceContext.trim().toUpperCase();
+    this.mode =
+        mode == null
+            ? TelemetryMode.SPOT
+            : mode;
     this.startedAt = Instant.now();
   }
 
   public void end() {
+
     if (!isActive()) {
-      throw new IllegalStateException("Telemetry session is already closed");
+      throw new IllegalStateException(
+          "Telemetry session is already closed");
     }
+
     endedAt = Instant.now();
   }
 
@@ -64,11 +96,35 @@ public class TelemetrySession {
     return endedAt == null;
   }
 
-  public UUID getId() { return id; }
-  public UUID getPatientId() { return patientId; }
-  public UUID getVisitId() { return visitId; }
-  public UUID getPreHospitalEncounterId() { return preHospitalEncounterId; }
-  public String getSourceContext() { return sourceContext; }
-  public Instant getStartedAt() { return startedAt; }
-  public Instant getEndedAt() { return endedAt; }
+  public UUID getId() {
+    return id;
+  }
+
+  public UUID getPatientId() {
+    return patientId;
+  }
+
+  public UUID getVisitId() {
+    return visitId;
+  }
+
+  public UUID getPreHospitalEncounterId() {
+    return preHospitalEncounterId;
+  }
+
+  public String getSourceContext() {
+    return sourceContext;
+  }
+
+  public TelemetryMode getMode() {
+    return mode;
+  }
+
+  public Instant getStartedAt() {
+    return startedAt;
+  }
+
+  public Instant getEndedAt() {
+    return endedAt;
+  }
 }

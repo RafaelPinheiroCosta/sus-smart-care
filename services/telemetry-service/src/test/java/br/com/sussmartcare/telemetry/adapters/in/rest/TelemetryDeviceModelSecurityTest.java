@@ -24,6 +24,9 @@ class TelemetryDeviceModelSecurityTest {
 
   @MockBean TelemetryApplicationService app;
   @MockBean TelemetrySummaryService summaries;
+  @MockBean TelemetrySessionCommandService sessionCommands;
+  @MockBean TelemetrySampleProcessor processor;
+  @MockBean TelemetryReadService reads;
 
   @Test
   void anonymousCannotListDevices() throws Exception {

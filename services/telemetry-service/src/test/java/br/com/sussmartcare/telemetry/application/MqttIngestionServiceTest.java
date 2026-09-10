@@ -22,17 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class MqttIngestionServiceTest {
 
-  @Mock
-  DeviceRepository devices;
-
-  @Mock
-  DeviceAssignmentRepository assignments;
-
-  @Mock
-  MqttIngestionMessageRepository messages;
-
-  @Mock
-  TelemetryApplicationService telemetry;
+  @Mock DeviceRepository devices;
+  @Mock DeviceAssignmentRepository assignments;
+  @Mock MqttIngestionMessageRepository messages;
+  @Mock TelemetrySampleProcessor processor;
 
   MqttIngestionService service;
 
@@ -44,7 +37,7 @@ class MqttIngestionServiceTest {
             devices,
             assignments,
             messages,
-            telemetry);
+            processor);
   }
 
   @Test
@@ -69,7 +62,8 @@ class MqttIngestionServiceTest {
         UUID.randomUUID();
 
     when(
-        devices.findByExternalId("MQTT-01"))
+        devices.findByExternalId(
+            "MQTT-01"))
         .thenReturn(
             Optional.of(device));
 
@@ -92,11 +86,13 @@ class MqttIngestionServiceTest {
                 Instant.now()));
 
     assertEquals(
-        MqttIngestionService.Status.ACCEPTED,
+        MqttIngestionService
+            .Status
+            .ACCEPTED,
         result.status());
 
-    verify(telemetry)
-        .ingest(
+    verify(processor)
+        .process(
             eq(sessionId),
             eq(device.getId()),
             eq("HEART_RATE"),
@@ -119,7 +115,8 @@ class MqttIngestionServiceTest {
         UUID.randomUUID();
 
     when(
-        devices.findByExternalId("MQTT-02"))
+        devices.findByExternalId(
+            "MQTT-02"))
         .thenReturn(
             Optional.of(device));
 
@@ -141,12 +138,14 @@ class MqttIngestionServiceTest {
                 Instant.now()));
 
     assertEquals(
-        MqttIngestionService.Status.DUPLICATE,
+        MqttIngestionService
+            .Status
+            .DUPLICATE,
         result.status());
 
     verifyNoInteractions(
         assignments,
-        telemetry);
+        processor);
   }
 
   @Test
@@ -160,7 +159,8 @@ class MqttIngestionServiceTest {
             null);
 
     when(
-        devices.findByExternalId("MQTT-03"))
+        devices.findByExternalId(
+            "MQTT-03"))
         .thenReturn(
             Optional.of(device));
 
@@ -182,11 +182,13 @@ class MqttIngestionServiceTest {
                 Instant.now()));
 
     assertEquals(
-        MqttIngestionService.Status.DUPLICATE,
+        MqttIngestionService
+            .Status
+            .DUPLICATE,
         result.status());
 
     verifyNoInteractions(
         assignments,
-        telemetry);
+        processor);
   }
 }

@@ -16,54 +16,76 @@ public class TelemetryController {
 
   private final TelemetryApplicationService app;
   private final TelemetrySummaryService summaries;
+  private final TelemetrySessionCommandService sessionCommands;
+  private final TelemetrySampleProcessor processor;
+  private final TelemetryReadService reads;
 
   public TelemetryController(
       TelemetryApplicationService app,
-      TelemetrySummaryService summaries) {
+      TelemetrySummaryService summaries,
+      TelemetrySessionCommandService sessionCommands,
+      TelemetrySampleProcessor processor,
+      TelemetryReadService reads) {
+
     this.app = app;
     this.summaries = summaries;
+    this.sessionCommands = sessionCommands;
+    this.processor = processor;
+    this.reads = reads;
   }
 
   public record DeviceRequest(
       @NotBlank String externalId,
       @NotBlank String deviceType,
       String manufacturer,
-      String model) {}
+      String model) {
+  }
 
   public record DeviceStatusRequest(
-      @NotNull DeviceStatus status) {}
+      @NotNull DeviceStatus status) {
+  }
 
   public record PlacementRequest(
       @NotNull DevicePlacementType placementType,
       UUID facilityId,
       UUID zoneId,
-      String ambulanceId) {}
+      String ambulanceId) {
+  }
 
   public record SessionRequest(
       @NotNull UUID patientId,
       UUID visitId,
       UUID preHospitalEncounterId,
-      @NotBlank String sourceContext) {}
+      @NotBlank String sourceContext,
+      TelemetryMode mode) {
+  }
 
   public record AssignmentRequest(
-      @NotNull UUID deviceId) {}
+      @NotNull UUID deviceId) {
+  }
 
   public record ObservationRequest(
       @NotNull UUID deviceId,
       @NotBlank String type,
       @NotNull Double value,
       String unit,
-      Instant measuredAt) {}
+      Instant measuredAt) {
+  }
 
   @PostMapping("/devices")
   public ResponseEntity<MedicalDevice> register(
-      @Valid @RequestBody DeviceRequest request) {
-    return ResponseEntity.status(201).body(
-        app.register(
-            request.externalId(),
-            request.deviceType(),
-            request.manufacturer(),
-            request.model()));
+      @Valid
+      @RequestBody
+      DeviceRequest request) {
+
+    return ResponseEntity
+        .status(201)
+        .body(
+            app.register(
+                request.externalId(),
+                request.deviceType(),
+                request.manufacturer(),
+                request.model()));
   }
 
   @GetMapping("/devices")
@@ -72,94 +94,154 @@ public class TelemetryController {
   }
 
   @GetMapping("/devices/{id}")
-  public MedicalDevice device(@PathVariable UUID id) {
+  public MedicalDevice device(
+      @PathVariable UUID id) {
+
     return app.getDevice(id);
   }
 
   @PatchMapping("/devices/{id}/status")
   public MedicalDevice status(
       @PathVariable UUID id,
-      @Valid @RequestBody DeviceStatusRequest request) {
-    return app.updateDeviceStatus(id, request.status());
+      @Valid
+      @RequestBody
+      DeviceStatusRequest request) {
+
+    return app.updateDeviceStatus(
+        id,
+        request.status());
   }
 
   @PostMapping("/devices/{id}/placements")
   public ResponseEntity<DevicePlacement> place(
       @PathVariable UUID id,
-      @Valid @RequestBody PlacementRequest request) {
-    return ResponseEntity.status(201).body(
-        app.place(
-            id,
-            request.placementType(),
-            request.facilityId(),
-            request.zoneId(),
-            request.ambulanceId()));
+      @Valid
+      @RequestBody
+      PlacementRequest request) {
+
+    return ResponseEntity
+        .status(201)
+        .body(
+            app.place(
+                id,
+                request.placementType(),
+                request.facilityId(),
+                request.zoneId(),
+                request.ambulanceId()));
   }
 
   @GetMapping("/devices/{id}/placement")
-  public DevicePlacement placement(@PathVariable UUID id) {
+  public DevicePlacement placement(
+      @PathVariable UUID id) {
+
     return app.activePlacement(id);
   }
 
   @PostMapping("/device-placements/{id}/end")
-  public DevicePlacement endPlacement(@PathVariable UUID id) {
+  public DevicePlacement endPlacement(
+      @PathVariable UUID id) {
+
     return app.endPlacement(id);
   }
 
   @PostMapping("/telemetry/sessions")
   public ResponseEntity<TelemetrySession> session(
-      @Valid @RequestBody SessionRequest request) {
-    return ResponseEntity.status(201).body(
-        app.start(
-            request.patientId(),
-            request.visitId(),
-            request.preHospitalEncounterId(),
-            request.sourceContext()));
+      @Valid
+      @RequestBody
+      SessionRequest request) {
+
+    return ResponseEntity
+        .status(201)
+        .body(
+            sessionCommands.start(
+                request.patientId(),
+                request.visitId(),
+                request.preHospitalEncounterId(),
+                request.sourceContext(),
+                request.mode()));
   }
 
   @GetMapping("/telemetry/sessions/{id}")
-  public TelemetrySession session(@PathVariable UUID id) {
+  public TelemetrySession session(
+      @PathVariable UUID id) {
+
     return app.getSession(id);
   }
 
   @PostMapping("/telemetry/sessions/{id}/end")
-  public TelemetrySession endSession(@PathVariable UUID id) {
+  public TelemetrySession endSession(
+      @PathVariable UUID id) {
+
     return app.endSession(id);
   }
 
   @PostMapping("/telemetry/sessions/{id}/assignments")
   public ResponseEntity<DeviceAssignment> assignment(
       @PathVariable UUID id,
-      @Valid @RequestBody AssignmentRequest request) {
-    return ResponseEntity.status(201).body(
-        app.assign(id, request.deviceId()));
+      @Valid
+      @RequestBody
+      AssignmentRequest request) {
+
+    return ResponseEntity
+        .status(201)
+        .body(
+            app.assign(
+                id,
+                request.deviceId()));
   }
 
   @PostMapping("/device-assignments/{id}/end")
-  public DeviceAssignment endAssignment(@PathVariable UUID id) {
+  public DeviceAssignment endAssignment(
+      @PathVariable UUID id) {
+
     return app.endAssignment(id);
   }
 
   @PostMapping("/telemetry/sessions/{id}/observations")
-  public ResponseEntity<BiometricObservation> observation(
-      @PathVariable UUID id,
-      @Valid @RequestBody ObservationRequest request) {
-    return ResponseEntity.status(202).body(
-        app.ingest(
-            id,
-            request.deviceId(),
-            request.type(),
-            request.value(),
-            request.unit(),
-            request.measuredAt()));
+  public ResponseEntity<TelemetrySampleProcessor.Result>
+      observation(
+          @PathVariable UUID id,
+          @Valid
+          @RequestBody
+          ObservationRequest request) {
+
+    return ResponseEntity
+        .status(202)
+        .body(
+            processor.process(
+                id,
+                request.deviceId(),
+                request.type(),
+                request.value(),
+                request.unit(),
+                request.measuredAt()));
   }
 
   @GetMapping("/telemetry/sessions/{sessionId}/summary")
   public TelemetrySummaryService.Summary summary(
       @PathVariable UUID sessionId,
       @RequestParam String type) {
+
     return summaries.summarize(
         sessionId,
-        type.trim().toUpperCase().replace(' ', '_'));
+        type.trim()
+            .toUpperCase()
+            .replace(' ', '_'));
+  }
+
+  @GetMapping("/telemetry/sessions/{sessionId}/aggregates")
+  public List<TelemetryAggregate> aggregates(
+      @PathVariable UUID sessionId) {
+
+    return reads.aggregates(
+        sessionId);
+  }
+
+  @GetMapping("/telemetry/sessions/{sessionId}/anomalies")
+  public List<TelemetryAnomaly> anomalies(
+      @PathVariable UUID sessionId) {
+
+    return reads.anomalies(
+        sessionId);
   }
 }

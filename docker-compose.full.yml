@@ -215,6 +215,11 @@ services:
       MQTT_USERNAME: device-demo
       MQTT_PASSWORD: device-demo-secret
       MQTT_CLIENT_ID: telemetry-service
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      TELEMETRY_ROLLING_SIZE: "120"
+      TELEMETRY_ROLLING_TTL_MINUTES: "120"
+      TELEMETRY_AGGREGATE_PUBLISH_EVERY: "10"
     depends_on:
       postgres:
         condition: service_healthy

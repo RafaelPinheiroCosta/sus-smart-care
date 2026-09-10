@@ -17,18 +17,18 @@ public class MqttIngestionService {
   private final DeviceRepository devices;
   private final DeviceAssignmentRepository assignments;
   private final MqttIngestionMessageRepository messages;
-  private final TelemetryApplicationService telemetry;
+  private final TelemetrySampleProcessor processor;
 
   public MqttIngestionService(
       DeviceRepository devices,
       DeviceAssignmentRepository assignments,
       MqttIngestionMessageRepository messages,
-      TelemetryApplicationService telemetry) {
+      TelemetrySampleProcessor processor) {
 
     this.devices = devices;
     this.assignments = assignments;
     this.messages = messages;
-    this.telemetry = telemetry;
+    this.processor = processor;
   }
 
   @Transactional
@@ -37,36 +37,35 @@ public class MqttIngestionService {
       Payload payload) {
 
     MedicalDevice device =
-        devices.findByExternalId(
-            requireText(
-                externalId,
-                "Device external id is required"))
+        devices
+            .findByExternalId(
+                requireText(
+                    externalId,
+                    "Device external id is required"))
             .orElseThrow(
                 () ->
                     new TelemetryNotFoundException(
                         "Device not found: " +
                         externalId));
 
-    if (messages.existsByDeviceIdAndMessageId(
-        device.getId(),
-        payload.messageId())) {
+    if (
+        messages.existsByDeviceIdAndMessageId(
+            device.getId(),
+            payload.messageId())
+    ) {
 
-      return new Result(
-          Status.DUPLICATE,
-          payload.messageId(),
-          payload.sequence(),
-          Instant.now());
+      return duplicate(
+          payload);
     }
 
-    if (messages.existsByDeviceIdAndSequenceNumber(
-        device.getId(),
-        payload.sequence())) {
+    if (
+        messages.existsByDeviceIdAndSequenceNumber(
+            device.getId(),
+            payload.sequence())
+    ) {
 
-      return new Result(
-          Status.DUPLICATE,
-          payload.messageId(),
-          payload.sequence(),
-          Instant.now());
+      return duplicate(
+          payload);
     }
 
     if (!device.isOperational()) {
@@ -91,7 +90,7 @@ public class MqttIngestionService {
             payload.messageId(),
             payload.sequence()));
 
-    telemetry.ingest(
+    processor.process(
         assignment.getTelemetrySessionId(),
         device.getId(),
         payload.type(),
@@ -101,6 +100,16 @@ public class MqttIngestionService {
 
     return new Result(
         Status.ACCEPTED,
+        payload.messageId(),
+        payload.sequence(),
+        Instant.now());
+  }
+
+  private Result duplicate(
+      Payload payload) {
+
+    return new Result(
+        Status.DUPLICATE,
         payload.messageId(),
         payload.sequence(),
         Instant.now());

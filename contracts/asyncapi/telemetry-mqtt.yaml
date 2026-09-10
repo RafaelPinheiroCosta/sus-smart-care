@@ -2,7 +2,7 @@ asyncapi: 3.0.0
 
 info:
   title: SUS Smart Care - Medical Device MQTT
-  version: 0.5.0
+  version: 0.6.0
   description: >
     MQTT transport used by medical devices to submit biometric telemetry.
     Patient and clinical-session identifiers are deliberately excluded from

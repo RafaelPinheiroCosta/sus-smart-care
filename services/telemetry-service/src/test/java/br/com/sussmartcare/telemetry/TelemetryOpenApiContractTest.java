@@ -24,7 +24,7 @@ class TelemetryOpenApiContractTest {
 
     String yaml = Files.readString(contract);
 
-    assertTrue(yaml.contains("version: 0.5.0"));
+    assertTrue(yaml.contains("version: 0.6.0"));
     assertTrue(yaml.contains("operationId: placeDevice"));
     assertTrue(yaml.contains("operationId: assignDeviceToTelemetrySession"));
     assertTrue(yaml.contains("operationId: endDeviceAssignment"));
