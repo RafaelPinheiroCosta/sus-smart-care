@@ -1,13 +1,20 @@
 openapi: 3.0.3
+
 info:
   title: Patient Journey API
-  version: 0.4.0
-  description: Pre-arrival journey, pre-anamnesis and check-in. Pre-registration never
-    grants clinical priority.
+  version: 0.5.0
+  description: >
+    Event-sourced patient journey from pre-arrival through triage,
+    queueing, care stages and terminal discharge, transfer or cancellation.
+    Clinical priority remains owned by the Triage service. Queue ordering
+    remains owned by the Queue service.
+
 servers:
-- url: http://localhost:8080
-  description: API Gateway
+  - url: http://localhost:8080
+    description: API Gateway
+
 paths:
+
   /api/v1/pre-visits:
     post:
       operationId: createPreVisit
@@ -19,58 +26,36 @@ paths:
               $ref: '#/components/schemas/CreateVisitRequest'
       responses:
         '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Visit'
+          description: Pre-visit created
         '400':
           description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
         '401':
           description: Unauthenticated
         '403':
           description: Forbidden
+
   /api/v1/visits/{id}:
     get:
       operationId: getVisit
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - $ref: '#/components/parameters/VisitId'
       responses:
         '200':
-          description: OK
+          description: Current event-sourced journey state
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Visit'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
         '401':
           description: Unauthenticated
         '403':
-          description: Forbidden
+          description: Patient access denied
+
   /api/v1/pre-visits/{id}/anamnesis:
     put:
       operationId: recordPreAnamnesis
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - $ref: '#/components/parameters/VisitId'
       requestBody:
         required: true
         content:
@@ -79,74 +64,197 @@ paths:
               $ref: '#/components/schemas/AnamnesisRequest'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Visit'
+          description: Pre-anamnesis recorded
         '400':
           description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
-        '401':
-          description: Unauthenticated
         '403':
-          description: Forbidden
+          description: Patient access denied
+        '409':
+          description: Invalid journey state
+
   /api/v1/pre-visits/{id}/check-in:
     post:
       operationId: checkIn
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - $ref: '#/components/parameters/VisitId'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Visit'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
-        '401':
-          description: Unauthenticated
+          description: Patient moved to WAITING_TRIAGE
+        '403':
+          description: Patient access denied
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/triage/start:
+    post:
+      operationId: startTriage
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      responses:
+        '200':
+          description: Journey moved to IN_TRIAGE
         '403':
           description: Forbidden
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/triage/complete:
+    post:
+      operationId: completeTriage
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      responses:
+        '200':
+          description: Journey moved to TRIAGED
+        '403':
+          description: Forbidden
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/queue:
+    post:
+      operationId: queueForCare
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+      responses:
+        '200':
+          description: Journey moved to QUEUED
+        '403':
+          description: Forbidden
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/call:
+    post:
+      operationId: callPatient
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      responses:
+        '200':
+          description: Journey moved to CALLED
+        '403':
+          description: Forbidden
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/service/start:
+    post:
+      operationId: startCare
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      responses:
+        '200':
+          description: Journey moved to IN_SERVICE
+        '403':
+          description: Forbidden
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/next-stage:
+    post:
+      operationId: waitForNextStage
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+      responses:
+        '200':
+          description: Journey moved to WAITING_NEXT_STAGE
+        '403':
+          description: Forbidden
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/discharge:
+    post:
+      operationId: dischargePatient
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+      responses:
+        '200':
+          description: Journey completed by discharge
+        '403':
+          description: Doctor or administrator required
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/transfer:
+    post:
+      operationId: transferPatient
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Journey completed by transfer
+        '400':
+          description: Invalid target facility
+        '403':
+          description: Doctor or administrator required
+        '409':
+          description: Invalid journey state
+
+  /api/v1/visits/{id}/cancel:
+    post:
+      operationId: cancelJourney
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelRequest'
+      responses:
+        '200':
+          description: Journey cancelled
+        '403':
+          description: Forbidden
+        '409':
+          description: Journey already terminal
+
 components:
+
+  parameters:
+
+    VisitId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
   securitySchemes:
+
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
-    ProblemDetail:
-      type: object
-      properties:
-        type:
-          type: string
-          format: uri
-        title:
-          type: string
-        status:
-          type: integer
-        detail:
-          type: string
-        instance:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        correlationId:
-          type: string
+
     Visit:
       type: object
       properties:
@@ -162,14 +270,44 @@ components:
         channel:
           type: string
           enum:
-          - MOBILE
-          - WEB
-          - KIOSK
-          - RECEPTION
-          - AMBULANCE
-          - EXTERNAL_SYSTEM
+            - MOBILE
+            - WEB
+            - KIOSK
+            - RECEPTION
+            - AMBULANCE
+            - EXTERNAL_SYSTEM
         status:
           type: string
+          enum:
+            - PRE_ARRIVAL
+            - ARRIVED
+            - WAITING_TRIAGE
+            - IN_TRIAGE
+            - TRIAGED
+            - QUEUED
+            - WAITING
+            - CALLED
+            - IN_SERVICE
+            - WAITING_NEXT_STAGE
+            - COMPLETED
+            - CANCELLED
+        currentStage:
+          type: string
+          nullable: true
+        outcome:
+          type: string
+          nullable: true
+          enum:
+            - DISCHARGED
+            - TRANSFERRED
+            - CANCELLED
+        transferFacilityId:
+          type: string
+          format: uuid
+          nullable: true
+        terminalNote:
+          type: string
+          nullable: true
         preAnamnesis:
           type: string
           nullable: true
@@ -180,12 +318,23 @@ components:
           type: string
           format: date-time
           nullable: true
+        lastTransitionAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        version:
+          type: integer
+          format: int64
+
     CreateVisitRequest:
       type: object
       required:
-      - patientId
-      - facilityId
-      - channel
+        - patientId
+        - facilityId
+        - channel
       properties:
         patientId:
           type: string
@@ -196,20 +345,58 @@ components:
         channel:
           type: string
           enum:
-          - MOBILE
-          - WEB
-          - KIOSK
-          - RECEPTION
-          - AMBULANCE
-          - EXTERNAL_SYSTEM
+            - MOBILE
+            - WEB
+            - KIOSK
+            - RECEPTION
+            - AMBULANCE
+            - EXTERNAL_SYSTEM
+
     AnamnesisRequest:
       type: object
       required:
-      - text
+        - text
       properties:
         text:
           type: string
           minLength: 1
           maxLength: 2000
+
+    StageRequest:
+      type: object
+      required:
+        - stage
+      properties:
+        stage:
+          type: string
+          minLength: 1
+          example: MEDICAL_CARE
+
+    NoteRequest:
+      type: object
+      properties:
+        note:
+          type: string
+
+    TransferRequest:
+      type: object
+      required:
+        - targetFacilityId
+      properties:
+        targetFacilityId:
+          type: string
+          format: uuid
+        note:
+          type: string
+
+    CancelRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+
 security:
-- bearerAuth: []
+  - bearerAuth: []
