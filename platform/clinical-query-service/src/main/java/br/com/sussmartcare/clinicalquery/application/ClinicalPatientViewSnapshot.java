@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * View Data optimized for the professional's current-care screen.
- * It is eventually consistent and does not replace the source records in each bounded context.
+ * Eventually consistent read model optimized for the professional current-care
+ * screen. Command-side bounded contexts remain authoritative.
  */
 public record ClinicalPatientViewSnapshot(
     UUID visitId,
@@ -20,6 +20,10 @@ public record ClinicalPatientViewSnapshot(
     String identityStatus,
     String preAnamnesis,
     String journeyStatus,
+    String journeyStage,
+    String journeyOutcome,
+    UUID transferFacilityId,
+    String terminalNote,
     String aiRecommendation,
     Double aiConfidence,
     String aiReasoning,
@@ -31,6 +35,8 @@ public record ClinicalPatientViewSnapshot(
     Integer estimatedMinutes,
     String queueStatus,
     List<VitalSnapshot> latestVitals,
+    ContinuousMetricSnapshot continuousTelemetry,
+    AnomalySnapshot latestAnomaly,
     String preArrivalRisk,
     Instant preArrivalEta,
     Instant updatedAt) {
@@ -39,17 +45,52 @@ public record ClinicalPatientViewSnapshot(
       ClinicalPatientView view,
       PatientProfileView profile,
       List<ClinicalLatestObservationView> observations) {
-    var vitals = observations.stream()
-        .map(VitalSnapshot::from)
-        .toList();
+
+    var vitals =
+        observations.stream()
+            .map(VitalSnapshot::from)
+            .toList();
+
+    ContinuousMetricSnapshot aggregate =
+        view.getLatestAggregateType() == null
+            ? null
+            : new ContinuousMetricSnapshot(
+                view.getLatestAggregateType(),
+                view.getLatestAggregateCount(),
+                view.getLatestAggregateMinimum(),
+                view.getLatestAggregateMaximum(),
+                view.getLatestAggregateAverage(),
+                view.getLatestAggregateUnit(),
+                view.getLatestAggregateMeasuredAt());
+
+    AnomalySnapshot anomaly =
+        view.getLatestAnomalyType() == null
+            ? null
+            : new AnomalySnapshot(
+                view.getLatestAnomalyType(),
+                view.getLatestAnomalyValue(),
+                view.getLatestAnomalyUnit(),
+                view.getLatestAnomalyReason(),
+                view.getLatestAnomalyDetectedAt());
+
     return new ClinicalPatientViewSnapshot(
         view.getVisitId(),
         view.getPatientId(),
-        profile == null ? null : profile.getFullName(),
-        profile == null ? null : profile.getBirthDate(),
-        profile == null ? null : profile.getIdentityStatus(),
+        profile == null
+            ? null
+            : profile.getFullName(),
+        profile == null
+            ? null
+            : profile.getBirthDate(),
+        profile == null
+            ? null
+            : profile.getIdentityStatus(),
         view.getPreAnamnesis(),
         view.getJourneyStatus(),
+        view.getJourneyStage(),
+        view.getJourneyOutcome(),
+        view.getTransferFacilityId(),
+        view.getTerminalNote(),
         view.getAiRecommendation(),
         view.getAiConfidence(),
         view.getAiReasoning(),
@@ -61,18 +102,45 @@ public record ClinicalPatientViewSnapshot(
         view.getEstimatedMinutes(),
         view.getQueueStatus(),
         vitals,
+        aggregate,
+        anomaly,
         view.getPreArrivalRisk(),
         view.getPreArrivalEta(),
         view.getUpdatedAt());
   }
 
-  public record VitalSnapshot(String type, Double value, String unit, Instant measuredAt) {
-    static VitalSnapshot from(ClinicalLatestObservationView observation) {
+  public record VitalSnapshot(
+      String type,
+      Double value,
+      String unit,
+      Instant measuredAt) {
+
+    static VitalSnapshot from(
+        ClinicalLatestObservationView observation) {
+
       return new VitalSnapshot(
           observation.getType(),
           observation.getValue(),
           observation.getUnit(),
           observation.getMeasuredAt());
     }
+  }
+
+  public record ContinuousMetricSnapshot(
+      String type,
+      Long count,
+      Double minimum,
+      Double maximum,
+      Double average,
+      String unit,
+      Instant lastMeasuredAt) {
+  }
+
+  public record AnomalySnapshot(
+      String type,
+      Double value,
+      String unit,
+      String reason,
+      Instant detectedAt) {
   }
 }

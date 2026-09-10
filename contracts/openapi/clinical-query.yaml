@@ -1,177 +1,303 @@
 openapi: 3.0.3
+
 info:
   title: SUS Smart Care - Clinical Query API
-  version: 0.4.0
-  description: CQRS read-side API optimized for clinical consultation. The response
-    is a projection assembled asynchronously from domain/integration events and can
-    therefore be eventually consistent with command-side services.
+  version: 0.5.0
+  description: >
+    CQRS read-side API optimized for the current clinical encounter.
+    The view is assembled asynchronously from integration events and is
+    eventually consistent. Command-side bounded contexts remain authoritative.
+
 servers:
-- url: http://localhost:8080
-  description: API Gateway
+  - url: http://localhost:8080
+    description: API Gateway
+
 paths:
+
   /api/v1/clinical-view/visits/{visitId}:
+
     get:
       tags:
-      - Clinical View
-      summary: Retrieve the current clinical View Data for a visit
+        - Clinical View
+      summary: Retrieve consolidated current-care View Data
       operationId: getClinicalPatientView
       security:
-      - bearerAuth: []
+        - bearerAuth: []
+
       parameters:
-      - name: visitId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: visitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
       responses:
+
         '200':
-          description: Consolidated clinical read model for the current visit
+          description: Consolidated clinical read model
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClinicalPatientView'
+
+        '401':
+          description: Unauthenticated
+
+        '403':
+          description: Clinical role required
+
         '404':
-          description: Projection not available yet or visit not found
+          description: Projection not available yet
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
+
 components:
+
   securitySchemes:
+
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
+
     ClinicalPatientView:
       type: object
-      required:
-      - visitId
-      - patientId
-      - latestVitals
-      - updatedAt
+
       properties:
+
         visitId:
           type: string
           format: uuid
+
         patientId:
           type: string
           format: uuid
+
         patientName:
           type: string
           nullable: true
+
         birthDate:
           type: string
           format: date
           nullable: true
+
         identityStatus:
           type: string
           nullable: true
-          example: CONFIRMED
+
         preAnamnesis:
           type: string
           nullable: true
+
         journeyStatus:
           type: string
           nullable: true
-          example: WAITING
+
+        journeyStage:
+          type: string
+          nullable: true
+
+        journeyOutcome:
+          type: string
+          nullable: true
+          enum:
+            - DISCHARGED
+            - TRANSFERRED
+            - CANCELLED
+
+        transferFacilityId:
+          type: string
+          format: uuid
+          nullable: true
+
+        terminalNote:
+          type: string
+          nullable: true
+
         aiRecommendation:
           type: string
           nullable: true
-          description: Decision-support output; never the authoritative clinical priority.
+          description: AI decision support only.
+
         aiConfidence:
           type: number
           format: double
-          minimum: 0
-          maximum: 1
           nullable: true
+
         aiReasoning:
           type: string
           nullable: true
+
         aiModelName:
           type: string
           nullable: true
+
         aiModelVersion:
           type: string
           nullable: true
+
         clinicalPriority:
           type: string
           nullable: true
-          description: Priority confirmed by an authorized professional.
+          description: >
+            Authoritative priority confirmed by an authorized professional.
           enum:
-          - LOW
-          - MEDIUM
-          - HIGH
-          - EMERGENCY
+            - LOW
+            - MEDIUM
+            - HIGH
+            - EMERGENCY
+
         presenceStatus:
           type: string
           nullable: true
+
         queuePosition:
           type: integer
           format: int32
           nullable: true
-          minimum: 1
+
         estimatedMinutes:
           type: integer
           format: int32
           nullable: true
-          minimum: 0
+
         queueStatus:
           type: string
           nullable: true
+
         latestVitals:
           type: array
-          description: Latest projected observation for each biometric type received
-            for this visit.
           items:
             $ref: '#/components/schemas/VitalSnapshot'
+
+        continuousTelemetry:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ContinuousMetricSnapshot'
+
+        latestAnomaly:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/AnomalySnapshot'
+
         preArrivalRisk:
           type: string
           nullable: true
+
         preArrivalEta:
           type: string
           format: date-time
           nullable: true
+
         updatedAt:
           type: string
           format: date-time
+
     VitalSnapshot:
       type: object
-      required:
-      - type
-      - value
-      - measuredAt
+
       properties:
+
         type:
           type: string
-          example: OXYGEN_SATURATION
+
         value:
           type: number
           format: double
+
         unit:
           type: string
           nullable: true
-          example: '%'
+
         measuredAt:
           type: string
           format: date-time
+
+    ContinuousMetricSnapshot:
+      type: object
+
+      properties:
+
+        type:
+          type: string
+
+        count:
+          type: integer
+          format: int64
+
+        minimum:
+          type: number
+          format: double
+
+        maximum:
+          type: number
+          format: double
+
+        average:
+          type: number
+          format: double
+
+        unit:
+          type: string
+          nullable: true
+
+        lastMeasuredAt:
+          type: string
+          format: date-time
+
+    AnomalySnapshot:
+      type: object
+
+      properties:
+
+        type:
+          type: string
+
+        value:
+          type: number
+          format: double
+
+        unit:
+          type: string
+          nullable: true
+
+        reason:
+          type: string
+
+        detectedAt:
+          type: string
+          format: date-time
+
     ProblemDetail:
       type: object
+
       properties:
+
         type:
           type: string
           format: uri
+
         title:
           type: string
+
         status:
           type: integer
+
         detail:
           type: string
+
         instance:
           type: string
+
         timestamp:
           type: string
           format: date-time
+
         correlationId:
           type: string

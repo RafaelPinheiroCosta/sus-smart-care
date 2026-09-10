@@ -148,6 +148,17 @@ public class FacilityApplicationService {
     CareZone zone = getZone(zoneId);
 
     if (active) {
+
+      HealthFacility facility =
+          getFacility(
+              zone.getFacilityId());
+
+      if (!facility.isActive()) {
+
+        throw new FacilityConflictException(
+            "Health facility is inactive");
+      }
+
       zone.activate();
     }
 
@@ -217,6 +228,10 @@ public class FacilityApplicationService {
         status,
         "status");
 
+    if (status == BedOperationalStatus.ACTIVE) {
+      assertBedHierarchyAvailable(bed);
+    }
+
     switch (status) {
 
       case ACTIVE ->
@@ -238,6 +253,8 @@ public class FacilityApplicationService {
       UUID visitId) {
 
     Bed bed = getBed(bedId);
+
+    assertBedHierarchyAvailable(bed);
 
     if (!bed.isOperational()) {
       throw new FacilityConflictException(
@@ -275,6 +292,30 @@ public class FacilityApplicationService {
         .orElseThrow(() ->
             new FacilityNotFoundException(
                 "Active bed occupation not found"));
+  }
+
+  private void assertBedHierarchyAvailable(
+      Bed bed) {
+
+    CareZone zone =
+        getZone(
+            bed.getZoneId());
+
+    if (!zone.isActive()) {
+
+      throw new FacilityConflictException(
+          "Care zone is inactive");
+    }
+
+    HealthFacility facility =
+        getFacility(
+            zone.getFacilityId());
+
+    if (!facility.isActive()) {
+
+      throw new FacilityConflictException(
+          "Health facility is inactive");
+    }
   }
 
   @Transactional
