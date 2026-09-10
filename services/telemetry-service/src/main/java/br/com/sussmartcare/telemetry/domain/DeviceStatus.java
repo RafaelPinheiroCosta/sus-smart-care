@@ -1,1 +1,7 @@
-package br.com.sussmartcare.telemetry.domain; public enum DeviceStatus { ACTIVE, INACTIVE, REVOKED }
+package br.com.sussmartcare.telemetry.domain;
+
+public enum DeviceStatus {
+  ACTIVE,
+  INACTIVE,
+  REVOKED
+}

@@ -39,7 +39,7 @@ spring:
         - id: telemetry
           uri: ${TELEMETRY_URL:http://localhost:8085}
           predicates:
-            - Path=/api/v1/devices/**,/api/v1/telemetry/**
+            - Path=/api/v1/devices/**,/api/v1/telemetry/**,/api/v1/device-placements/**,/api/v1/device-assignments/**
 
         - id: presence
           uri: ${PRESENCE_URL:http://localhost:8086}

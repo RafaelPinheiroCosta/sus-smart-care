@@ -1,300 +1,192 @@
 openapi: 3.0.3
+
 info:
-  title: Telemetry & Device Integration API
-  version: 0.4.0
-  description: Device/gateway ingestion boundary for hospital and pre-hospital biometric
-    telemetry.
+  title: SUS Smart Care - Telemetry and Device API
+  version: 0.5.0
+  description: >
+    Medical device inventory, temporal placement, patient-session assignment
+    and biometric telemetry boundary.
+
 servers:
-- url: http://localhost:8080
-  description: API Gateway
+  - url: http://localhost:8080
+    description: API Gateway
+  - url: http://localhost:8085
+    description: Direct telemetry service
+
+security:
+  - bearerAuth: []
+
 paths:
+
   /api/v1/devices:
+    get:
+      operationId: listDevices
+      x-required-roles: [OPERATOR, TRIAGE_NURSE, DOCTOR, AMBULANCE_TEAM, ADMIN]
+      responses:
+        '200': { description: Devices }
+        '401': { description: Unauthenticated }
+        '403': { description: Forbidden }
     post:
       operationId: registerDevice
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeviceRequest'
+      x-required-roles: [ADMIN]
       responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MedicalDevice'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Forbidden
+        '201': { description: Device registered }
+        '409': { description: Device already exists }
+
+  /api/v1/devices/{id}:
+    get:
+      operationId: getDevice
+      x-required-roles: [OPERATOR, TRIAGE_NURSE, DOCTOR, AMBULANCE_TEAM, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Device }
+        '404': { description: Not found }
+
+  /api/v1/devices/{id}/status:
+    patch:
+      operationId: updateDeviceStatus
+      x-required-roles: [ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Device status updated }
+        '409': { description: Invalid device transition }
+
+  /api/v1/devices/{id}/placements:
+    post:
+      operationId: placeDevice
+      x-required-roles: [OPERATOR, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '201': { description: Placement created }
+        '409': { description: Device already placed }
+
+  /api/v1/devices/{id}/placement:
+    get:
+      operationId: getActiveDevicePlacement
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Active placement }
+        '404': { description: No active placement }
+
+  /api/v1/device-placements/{id}/end:
+    post:
+      operationId: endDevicePlacement
+      x-required-roles: [OPERATOR, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Placement ended }
+        '409': { description: Device is still assigned }
+
   /api/v1/telemetry/sessions:
     post:
       operationId: startTelemetrySession
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SessionRequest'
+      x-required-roles: [TRIAGE_NURSE, AMBULANCE_TEAM, ADMIN]
       responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TelemetrySession'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Forbidden
+        '201': { description: Session started }
+
+  /api/v1/telemetry/sessions/{id}:
+    get:
+      operationId: getTelemetrySession
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Session }
+        '404': { description: Not found }
+
+  /api/v1/telemetry/sessions/{id}/end:
+    post:
+      operationId: endTelemetrySession
+      x-required-roles: [TRIAGE_NURSE, AMBULANCE_TEAM, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Session ended }
+
+  /api/v1/telemetry/sessions/{id}/assignments:
+    post:
+      operationId: assignDeviceToTelemetrySession
+      x-required-roles: [TRIAGE_NURSE, AMBULANCE_TEAM, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '201': { description: Device assigned }
+        '409': { description: Device unavailable }
+
+  /api/v1/device-assignments/{id}/end:
+    post:
+      operationId: endDeviceAssignment
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Assignment ended }
+
   /api/v1/telemetry/sessions/{id}/observations:
     post:
       operationId: ingestObservation
+      x-required-roles: [DEVICE, AMBULANCE_TEAM, TRIAGE_NURSE, ADMIN]
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ObservationRequest'
+        - $ref: '#/components/parameters/Id'
       responses:
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BiometricObservation'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Forbidden
+        '202': { description: Observation accepted }
+        '409': { description: Device is not assigned to this session }
+
   /api/v1/telemetry/sessions/{sessionId}/summary:
     get:
       operationId: getTelemetrySummary
       parameters:
-      - name: sessionId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: type
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: type
+          in: query
+          required: true
+          schema: { type: string }
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TelemetrySummary'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Forbidden
+        '200': { description: Statistical telemetry summary }
+
 components:
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
   schemas:
-    ProblemDetail:
-      type: object
-      properties:
-        type:
-          type: string
-          format: uri
-        title:
-          type: string
-        status:
-          type: integer
-        detail:
-          type: string
-        instance:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        correlationId:
-          type: string
+    DeviceStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE, REVOKED]
+
+    DevicePlacementType:
+      type: string
+      enum: [FACILITY, CARE_ZONE, AMBULANCE]
+
     MedicalDevice:
       type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        externalId:
-          type: string
-        deviceType:
-          type: string
-        manufacturer:
-          type: string
-        model:
-          type: string
-        status:
-          type: string
-        registeredAt:
-          type: string
-          format: date-time
-    DeviceRequest:
+
+    DevicePlacement:
       type: object
-      required:
-      - externalId
-      - deviceType
-      properties:
-        externalId:
-          type: string
-        deviceType:
-          type: string
-        manufacturer:
-          type: string
-        model:
-          type: string
+
+    DeviceAssignment:
+      type: object
+
     TelemetrySession:
       type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        patientId:
-          type: string
-          format: uuid
-        visitId:
-          type: string
-          format: uuid
-          nullable: true
-        preHospitalEncounterId:
-          type: string
-          format: uuid
-          nullable: true
-        sourceContext:
-          type: string
-        startedAt:
-          type: string
-          format: date-time
-        endedAt:
-          type: string
-          format: date-time
-          nullable: true
-    SessionRequest:
-      type: object
-      required:
-      - patientId
-      - sourceContext
-      properties:
-        patientId:
-          type: string
-          format: uuid
-        visitId:
-          type: string
-          format: uuid
-        preHospitalEncounterId:
-          type: string
-          format: uuid
-        sourceContext:
-          type: string
-          enum:
-          - TRIAGE
-          - PRE_HOSPITAL
-          - IN_CARE
-          - HOME_FUTURE
-    ObservationRequest:
-      type: object
-      required:
-      - deviceId
-      - type
-      - value
-      properties:
-        deviceId:
-          type: string
-          format: uuid
-        type:
-          type: string
-        value:
-          type: number
-        unit:
-          type: string
-        measuredAt:
-          type: string
-          format: date-time
+
     BiometricObservation:
       type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        sessionId:
-          type: string
-          format: uuid
-        deviceId:
-          type: string
-          format: uuid
-        type:
-          type: string
-        value:
-          type: number
-        unit:
-          type: string
-        measuredAt:
-          type: string
-          format: date-time
-        sourceContext:
-          type: string
-    TelemetrySummary:
-      type: object
-      description: Statistical, non-clinical summary. It must not be interpreted as
-        diagnosis.
-      properties:
-        type:
-          type: string
-        count:
-          type: integer
-        minimum:
-          type: number
-        maximum:
-          type: number
-        average:
-          type: number
-        trend:
-          type: string
-          enum:
-          - RISING
-          - FALLING
-          - STABLE
-          - INSUFFICIENT_DATA
-security:
-- bearerAuth: []
