@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Presence API
-  version: 0.4.0
+  version: 0.5.0
   description: Technology-neutral presence events from mobile, kiosk, reception, QR/NFC/beacon
     or staff confirmation.
 servers:
@@ -63,6 +63,105 @@ paths:
           description: Unauthenticated
         '403':
           description: Forbidden
+  /api/v1/presence/gateways:
+    post:
+      operationId: registerPresenceGateway
+      responses:
+        '201':
+          description: Gateway registered
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+    get:
+      operationId: listPresenceGateways
+      responses:
+        '200':
+          description: Registered gateways
+
+  /api/v1/presence/tracking-sessions:
+    post:
+      operationId: startPresenceTracking
+      description: >
+        Starts a temporal presence tracking session and returns an opaque
+        one-time tracking token. Only its SHA-256 hash is persisted.
+      responses:
+        '201':
+          description: Tracking session created
+        '400':
+          description: Invalid request
+        '403':
+          description: Visit access denied
+        '409':
+          description: Visit already has active tracking
+
+  /api/v1/presence/tracking-sessions/{id}:
+    get:
+      operationId: getPresenceTracking
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Current patient presence state
+        '403':
+          description: Visit access denied
+        '404':
+          description: Tracking session not found
+
+  /api/v1/presence/tracking-sessions/{id}/end:
+    post:
+      operationId: endPresenceTracking
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Tracking session ended
+        '403':
+          description: Visit access denied
+        '404':
+          description: Tracking session not found
+        '409':
+          description: Tracking session already closed
+
+  /api/v1/presence/signals:
+    post:
+      operationId: recordPresenceSignal
+      description: >
+        Technology-neutral signal endpoint supporting BLE, WIFI, UWB, QR,
+        kiosk, manual and system sources. Raw signals use the opaque tracking
+        token and do not contain patientId or visitId.
+      responses:
+        '202':
+          description: Signal accepted or idempotently recognized
+        '400':
+          description: Invalid signal or gateway mismatch
+        '404':
+          description: Tracking session or gateway not found
+        '409':
+          description: Closed session or out-of-order signal
+
+  /api/v1/presence/operations/zones:
+    get:
+      operationId: presenceZoneLoad
+      description: >
+        Operational zone occupancy view without exposing patient identity.
+      responses:
+        '200':
+          description: Active occupancy and bottleneck status by zone
 components:
   securitySchemes:
     bearerAuth:
