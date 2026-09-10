@@ -16,3 +16,4 @@ scrape_configs:
           - notification-service:8088
           - identity-access-service:8089
           - clinical-query-service:8090
+          - facility-service:8091

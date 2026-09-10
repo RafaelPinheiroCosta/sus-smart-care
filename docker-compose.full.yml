@@ -327,6 +327,26 @@ services:
       keycloak:
         condition: service_started
     restart: unless-stopped
+  facility-service:
+    build:
+      context: ./services/facility-service
+    ports:
+    - 8091:8091
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/facility_db
+      DB_USER: sus
+      DB_PASSWORD: sus
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 4
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
+      KEYCLOAK_ISSUER: http://localhost:8180/realms/sus-smart-care
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/sus-smart-care/protocol/openid-connect/certs
+      OTEL_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    restart: unless-stopped
   api-gateway:
     build:
       context: ./platform/api-gateway
@@ -346,6 +366,7 @@ services:
       NOTIFICATION_URL: http://notification-service:8088
       IDENTITY_ACCESS_URL: http://identity-access-service:8089
       CLINICAL_QUERY_URL: http://clinical-query-service:8090
+      FACILITY_URL: http://facility-service:8091
     depends_on:
       keycloak:
         condition: service_started

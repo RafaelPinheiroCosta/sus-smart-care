@@ -1,55 +1,86 @@
 server:
   port: 8080
+
 spring:
   application:
     name: api-gateway
+
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8180/realms/sus-smart-care}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/sus-smart-care/protocol/openid-connect/certs}
+
   cloud:
     gateway:
       routes:
+
         - id: patient-registry
           uri: ${PATIENT_REGISTRY_URL:http://localhost:8081}
-          predicates: [ 'Path=/api/v1/patients/**,/api/v1/representations/**' ]
+          predicates:
+            - Path=/api/v1/patients/**,/api/v1/representations/**
+
         - id: patient-journey
           uri: ${PATIENT_JOURNEY_URL:http://localhost:8082}
-          predicates: [ 'Path=/api/v1/pre-visits/**,/api/v1/visits/**' ]
+          predicates:
+            - Path=/api/v1/pre-visits/**,/api/v1/visits/**
+
         - id: triage
           uri: ${TRIAGE_URL:http://localhost:8083}
-          predicates: [ 'Path=/api/v1/triages/**' ]
+          predicates:
+            - Path=/api/v1/triages/**
+
         - id: queue
           uri: ${QUEUE_URL:http://localhost:8084}
-          predicates: [ 'Path=/api/v1/queues/**,/api/v1/queue-entries/**' ]
+          predicates:
+            - Path=/api/v1/queues/**,/api/v1/queue-entries/**
+
         - id: telemetry
           uri: ${TELEMETRY_URL:http://localhost:8085}
-          predicates: [ 'Path=/api/v1/devices/**,/api/v1/telemetry/**' ]
+          predicates:
+            - Path=/api/v1/devices/**,/api/v1/telemetry/**
+
         - id: presence
           uri: ${PRESENCE_URL:http://localhost:8086}
-          predicates: [ 'Path=/api/v1/presence/**' ]
+          predicates:
+            - Path=/api/v1/presence/**
+
         - id: prehospital
           uri: ${PREHOSPITAL_URL:http://localhost:8087}
-          predicates: [ 'Path=/api/v1/pre-hospital/**' ]
+          predicates:
+            - Path=/api/v1/pre-hospital/**
+
         - id: notification
           uri: ${NOTIFICATION_URL:http://localhost:8088}
-          predicates: [ 'Path=/api/v1/notifications/**' ]
+          predicates:
+            - Path=/api/v1/notifications/**
+
         - id: identity-access
           uri: ${IDENTITY_ACCESS_URL:http://localhost:8089}
-          predicates: [ 'Path=/api/v1/identity/**' ]
+          predicates:
+            - Path=/api/v1/identity/**
+
         - id: clinical-query
           uri: ${CLINICAL_QUERY_URL:http://localhost:8090}
-          predicates: [ 'Path=/api/v1/clinical-view/**' ]
+          predicates:
+            - Path=/api/v1/clinical-view/**
+
+        - id: facility
+          uri: ${FACILITY_URL:http://localhost:8091}
+          predicates:
+            - Path=/api/v1/facilities/**,/api/v1/zones/**,/api/v1/beds/**,/api/v1/bed-occupations/**
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,prometheus
+
   tracing:
     sampling:
       probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+
   otlp:
     tracing:
       endpoint: ${OTEL_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
