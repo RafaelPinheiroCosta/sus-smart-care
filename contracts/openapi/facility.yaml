@@ -1,0 +1,795 @@
+openapi: 3.0.3
+
+info:
+  title: SUS Smart Care - Facility API
+  version: 0.5.0
+  description: >
+    API operacional responsável pela topologia física das unidades
+    assistenciais e pela ocupação temporal de leitos.
+
+servers:
+  - url: http://localhost:8080
+    description: API Gateway
+  - url: http://localhost:8091
+    description: Facility Service direto
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Facilities
+  - name: Care Zones
+  - name: Beds
+  - name: Bed Occupations
+
+paths:
+
+  /api/v1/facilities:
+    get:
+      tags: [Facilities]
+      operationId: listFacilities
+      summary: Lista unidades de saúde
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - AMBULANCE_TEAM
+        - ADMIN
+      responses:
+        '200':
+          description: Lista de unidades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FacilityResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Facilities]
+      operationId: createFacility
+      summary: Cadastra uma unidade de saúde
+      x-required-roles:
+        - ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFacilityRequest'
+      responses:
+        '201':
+          description: Unidade criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/facilities/{facilityId}:
+    parameters:
+      - $ref: '#/components/parameters/FacilityId'
+
+    get:
+      tags: [Facilities]
+      operationId: getFacility
+      summary: Consulta uma unidade
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - AMBULANCE_TEAM
+        - ADMIN
+      responses:
+        '200':
+          description: Unidade encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/facilities/{facilityId}/status:
+    parameters:
+      - $ref: '#/components/parameters/FacilityId'
+
+    patch:
+      tags: [Facilities]
+      operationId: updateFacilityStatus
+      summary: Ativa ou desativa uma unidade
+      x-required-roles:
+        - ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateActivationRequest'
+      responses:
+        '200':
+          description: Estado atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/facilities/{facilityId}/zones:
+    parameters:
+      - $ref: '#/components/parameters/FacilityId'
+
+    get:
+      tags: [Care Zones]
+      operationId: listCareZones
+      summary: Lista setores assistenciais da unidade
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - AMBULANCE_TEAM
+        - ADMIN
+      responses:
+        '200':
+          description: Lista de setores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CareZoneResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Care Zones]
+      operationId: createCareZone
+      summary: Cria um setor assistencial
+      x-required-roles:
+        - ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateZoneRequest'
+      responses:
+        '201':
+          description: Setor criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CareZoneResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/zones/{zoneId}:
+    parameters:
+      - $ref: '#/components/parameters/ZoneId'
+
+    get:
+      tags: [Care Zones]
+      operationId: getCareZone
+      summary: Consulta um setor
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - AMBULANCE_TEAM
+        - ADMIN
+      responses:
+        '200':
+          description: Setor encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CareZoneResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/zones/{zoneId}/status:
+    parameters:
+      - $ref: '#/components/parameters/ZoneId'
+
+    patch:
+      tags: [Care Zones]
+      operationId: updateCareZoneStatus
+      summary: Ativa ou desativa um setor
+      x-required-roles:
+        - ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateActivationRequest'
+      responses:
+        '200':
+          description: Estado atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CareZoneResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/zones/{zoneId}/beds:
+    parameters:
+      - $ref: '#/components/parameters/ZoneId'
+
+    get:
+      tags: [Beds]
+      operationId: listBeds
+      summary: Lista leitos de um setor
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - AMBULANCE_TEAM
+        - ADMIN
+      responses:
+        '200':
+          description: Lista de leitos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BedResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Beds]
+      operationId: createBed
+      summary: Cadastra um recurso assistencial
+      x-required-roles:
+        - ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBedRequest'
+      responses:
+        '201':
+          description: Leito criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/beds/{bedId}:
+    parameters:
+      - $ref: '#/components/parameters/BedId'
+
+    get:
+      tags: [Beds]
+      operationId: getBed
+      summary: Consulta um leito
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - AMBULANCE_TEAM
+        - ADMIN
+      responses:
+        '200':
+          description: Leito encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BedResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/beds/{bedId}/operational-status:
+    parameters:
+      - $ref: '#/components/parameters/BedId'
+
+    patch:
+      tags: [Beds]
+      operationId: updateBedOperationalStatus
+      summary: Altera o estado operacional do leito
+      description: >
+        O estado operacional é independente da ocupação temporal.
+      x-required-roles:
+        - ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBedOperationalStatusRequest'
+      responses:
+        '200':
+          description: Estado atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/beds/{bedId}/occupations:
+    parameters:
+      - $ref: '#/components/parameters/BedId'
+
+    post:
+      tags: [Bed Occupations]
+      operationId: occupyBed
+      summary: Inicia ocupação temporal de um leito
+      description: >
+        Um leito pode possuir apenas uma ocupação ativa e uma visita
+        pode possuir apenas uma ocupação ativa.
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OccupyBedRequest'
+      responses:
+        '201':
+          description: Ocupação criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BedOccupationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/beds/{bedId}/occupation:
+    parameters:
+      - $ref: '#/components/parameters/BedId'
+
+    get:
+      tags: [Bed Occupations]
+      operationId: getActiveBedOccupation
+      summary: Consulta ocupação ativa
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - AMBULANCE_TEAM
+        - ADMIN
+      responses:
+        '200':
+          description: Ocupação ativa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BedOccupationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/bed-occupations/{occupationId}/release:
+    parameters:
+      - $ref: '#/components/parameters/OccupationId'
+
+    post:
+      tags: [Bed Occupations]
+      operationId: releaseBedOccupation
+      summary: Encerra uma ocupação
+      x-required-roles:
+        - OPERATOR
+        - TRIAGE_NURSE
+        - DOCTOR
+        - ADMIN
+      responses:
+        '200':
+          description: Ocupação encerrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BedOccupationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+
+    FacilityId:
+      name: facilityId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ZoneId:
+      name: zoneId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    BedId:
+      name: bedId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    OccupationId:
+      name: occupationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+
+    BadRequest:
+      description: Requisição inválida
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    Unauthorized:
+      description: Token ausente ou inválido
+
+    Forbidden:
+      description: Perfil sem autorização
+
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    Conflict:
+      description: Conflito de estado ou unicidade
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+  schemas:
+
+    FacilityType:
+      type: string
+      enum:
+        - HOSPITAL
+        - UPA
+        - UBS
+        - OTHER
+
+    CareZoneType:
+      type: string
+      enum:
+        - RECEPTION
+        - TRIAGE
+        - WAITING
+        - CONSULTATION
+        - EMERGENCY
+        - OBSERVATION
+        - EXAM
+        - PROCEDURE
+        - INPATIENT
+        - OTHER
+
+    BedType:
+      type: string
+      enum:
+        - BED
+        - STRETCHER
+        - CHAIR
+        - OTHER
+
+    BedOperationalStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - MAINTENANCE
+        - OUT_OF_SERVICE
+
+    CreateFacilityRequest:
+      type: object
+      required:
+        - code
+        - name
+        - type
+      properties:
+        code:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        type:
+          $ref: '#/components/schemas/FacilityType'
+
+    CreateZoneRequest:
+      type: object
+      required:
+        - code
+        - name
+        - type
+      properties:
+        code:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        type:
+          $ref: '#/components/schemas/CareZoneType'
+
+    CreateBedRequest:
+      type: object
+      required:
+        - code
+        - type
+      properties:
+        code:
+          type: string
+          minLength: 1
+        type:
+          $ref: '#/components/schemas/BedType'
+
+    OccupyBedRequest:
+      type: object
+      required:
+        - visitId
+      properties:
+        visitId:
+          type: string
+          format: uuid
+
+    UpdateActivationRequest:
+      type: object
+      required:
+        - active
+      properties:
+        active:
+          type: boolean
+
+    UpdateBedOperationalStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/BedOperationalStatus'
+
+    FacilityResponse:
+      type: object
+      required:
+        - id
+        - code
+        - name
+        - type
+        - active
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/FacilityType'
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CareZoneResponse:
+      type: object
+      required:
+        - id
+        - facilityId
+        - code
+        - name
+        - type
+        - active
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        facilityId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/CareZoneType'
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BedResponse:
+      type: object
+      required:
+        - id
+        - zoneId
+        - code
+        - type
+        - operationalStatus
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        zoneId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        type:
+          $ref: '#/components/schemas/BedType'
+        operationalStatus:
+          $ref: '#/components/schemas/BedOperationalStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BedOccupationResponse:
+      type: object
+      required:
+        - id
+        - bedId
+        - visitId
+        - startedAt
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+        bedId:
+          type: string
+          format: uuid
+        visitId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        active:
+          type: boolean
+
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        timestamp:
+          type: string
+          format: date-time

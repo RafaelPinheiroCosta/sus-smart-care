@@ -17,13 +17,19 @@ class ArchitectureTest {
           .definedBy("..domain..")
           .layer("Application")
           .definedBy("..application..")
+          .layer("Adapters")
+          .definedBy("..adapters..")
           .layer("Infrastructure")
           .definedBy("..infrastructure..")
           .whereLayer("Domain")
           .mayOnlyBeAccessedByLayers(
               "Application",
+              "Adapters",
               "Infrastructure")
           .whereLayer("Application")
           .mayOnlyBeAccessedByLayers(
-              "Infrastructure");
+              "Adapters",
+              "Infrastructure")
+          .whereLayer("Adapters")
+          .mayNotBeAccessedByAnyLayer();
 }

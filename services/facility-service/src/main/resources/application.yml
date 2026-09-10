@@ -22,6 +22,13 @@ spring:
   flyway:
     enabled: true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8180/realms/sus-smart-care}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/sus-smart-care/protocol/openid-connect/certs}
+
 management:
   endpoints:
     web:

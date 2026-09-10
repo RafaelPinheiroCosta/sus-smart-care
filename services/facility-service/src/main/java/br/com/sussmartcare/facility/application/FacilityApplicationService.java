@@ -3,6 +3,7 @@ package br.com.sussmartcare.facility.application;
 import br.com.sussmartcare.facility.domain.Bed;
 import br.com.sussmartcare.facility.domain.BedOccupation;
 import br.com.sussmartcare.facility.domain.BedOccupationRepository;
+import br.com.sussmartcare.facility.domain.BedOperationalStatus;
 import br.com.sussmartcare.facility.domain.BedRepository;
 import br.com.sussmartcare.facility.domain.BedType;
 import br.com.sussmartcare.facility.domain.CareZone;
@@ -12,6 +13,7 @@ import br.com.sussmartcare.facility.domain.FacilityType;
 import br.com.sussmartcare.facility.domain.HealthFacility;
 import br.com.sussmartcare.facility.domain.HealthFacilityRepository;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,14 +44,17 @@ public class FacilityApplicationService {
       String name,
       FacilityType type) {
 
-    facilityRepository.findByCode(code.trim())
+    HealthFacility facility =
+        new HealthFacility(code, name, type);
+
+    facilityRepository
+        .findByCode(facility.getCode())
         .ifPresent(existing -> {
-          throw new IllegalStateException(
+          throw new FacilityConflictException(
               "Facility code already exists");
         });
 
-    return facilityRepository.save(
-        new HealthFacility(code, name, type));
+    return facilityRepository.save(facility);
   }
 
   @Transactional(readOnly = true)
@@ -57,13 +62,32 @@ public class FacilityApplicationService {
 
     return facilityRepository.findById(facilityId)
         .orElseThrow(() ->
-            new IllegalArgumentException(
+            new FacilityNotFoundException(
                 "Health facility not found"));
   }
 
   @Transactional(readOnly = true)
   public List<HealthFacility> listFacilities() {
     return facilityRepository.findAll();
+  }
+
+  @Transactional
+  public HealthFacility setFacilityActive(
+      UUID facilityId,
+      boolean active) {
+
+    HealthFacility facility =
+        getFacility(facilityId);
+
+    if (active) {
+      facility.activate();
+    }
+
+    if (!active) {
+      facility.deactivate();
+    }
+
+    return facilityRepository.save(facility);
   }
 
   @Transactional
@@ -76,23 +100,36 @@ public class FacilityApplicationService {
     HealthFacility facility = getFacility(facilityId);
 
     if (!facility.isActive()) {
-      throw new IllegalStateException(
+      throw new FacilityConflictException(
           "Health facility is inactive");
     }
 
-    zoneRepository
-        .findByFacilityIdAndCode(facilityId, code.trim())
-        .ifPresent(existing -> {
-          throw new IllegalStateException(
-              "Care zone code already exists in facility");
-        });
-
-    return zoneRepository.save(
+    CareZone zone =
         new CareZone(
             facilityId,
             code,
             name,
-            type));
+            type);
+
+    zoneRepository
+        .findByFacilityIdAndCode(
+            facilityId,
+            zone.getCode())
+        .ifPresent(existing -> {
+          throw new FacilityConflictException(
+              "Care zone code already exists in facility");
+        });
+
+    return zoneRepository.save(zone);
+  }
+
+  @Transactional(readOnly = true)
+  public CareZone getZone(UUID zoneId) {
+
+    return zoneRepository.findById(zoneId)
+        .orElseThrow(() ->
+            new FacilityNotFoundException(
+                "Care zone not found"));
   }
 
   @Transactional(readOnly = true)
@@ -104,42 +141,95 @@ public class FacilityApplicationService {
   }
 
   @Transactional
+  public CareZone setZoneActive(
+      UUID zoneId,
+      boolean active) {
+
+    CareZone zone = getZone(zoneId);
+
+    if (active) {
+      zone.activate();
+    }
+
+    if (!active) {
+      zone.deactivate();
+    }
+
+    return zoneRepository.save(zone);
+  }
+
+  @Transactional
   public Bed createBed(
       UUID zoneId,
       String code,
       BedType type) {
 
-    CareZone zone = zoneRepository.findById(zoneId)
-        .orElseThrow(() ->
-            new IllegalArgumentException(
-                "Care zone not found"));
+    CareZone zone = getZone(zoneId);
 
     if (!zone.isActive()) {
-      throw new IllegalStateException(
+      throw new FacilityConflictException(
           "Care zone is inactive");
     }
 
+    Bed bed =
+        new Bed(
+            zoneId,
+            code,
+            type);
 
     bedRepository
-        .findByZoneIdAndCode(zoneId, code.trim())
+        .findByZoneIdAndCode(
+            zoneId,
+            bed.getCode())
         .ifPresent(existing -> {
-          throw new IllegalStateException(
+          throw new FacilityConflictException(
               "Bed code already exists in care zone");
         });
 
-    return bedRepository.save(
-        new Bed(zoneId, code, type));
+    return bedRepository.save(bed);
+  }
+
+  @Transactional(readOnly = true)
+  public Bed getBed(UUID bedId) {
+
+    return bedRepository.findById(bedId)
+        .orElseThrow(() ->
+            new FacilityNotFoundException(
+                "Bed not found"));
   }
 
   @Transactional(readOnly = true)
   public List<Bed> listBeds(UUID zoneId) {
 
-    zoneRepository.findById(zoneId)
-        .orElseThrow(() ->
-            new IllegalArgumentException(
-                "Care zone not found"));
+    getZone(zoneId);
 
     return bedRepository.findByZoneId(zoneId);
+  }
+
+  @Transactional
+  public Bed setBedOperationalStatus(
+      UUID bedId,
+      BedOperationalStatus status) {
+
+    Bed bed = getBed(bedId);
+
+    Objects.requireNonNull(
+        status,
+        "status");
+
+    switch (status) {
+
+      case ACTIVE ->
+          bed.activate();
+
+      case MAINTENANCE ->
+          bed.putInMaintenance();
+
+      case OUT_OF_SERVICE ->
+          bed.putOutOfService();
+    }
+
+    return bedRepository.save(bed);
   }
 
   @Transactional
@@ -147,13 +237,10 @@ public class FacilityApplicationService {
       UUID bedId,
       UUID visitId) {
 
-    Bed bed = bedRepository.findById(bedId)
-        .orElseThrow(() ->
-            new IllegalArgumentException(
-                "Bed not found"));
+    Bed bed = getBed(bedId);
 
     if (!bed.isOperational()) {
-      throw new IllegalStateException(
+      throw new FacilityConflictException(
           "Bed is not operational");
     }
 
@@ -161,7 +248,7 @@ public class FacilityApplicationService {
         .findByBedIdAndEndedAtIsNull(bedId)
         .isPresent()) {
 
-      throw new IllegalStateException(
+      throw new FacilityConflictException(
           "Bed is already occupied");
     }
 
@@ -169,12 +256,25 @@ public class FacilityApplicationService {
         .findByVisitIdAndEndedAtIsNull(visitId)
         .isPresent()) {
 
-      throw new IllegalStateException(
+      throw new FacilityConflictException(
           "Visit already has an active bed occupation");
     }
 
     return occupationRepository.save(
         new BedOccupation(bedId, visitId));
+  }
+
+  @Transactional(readOnly = true)
+  public BedOccupation getActiveOccupation(
+      UUID bedId) {
+
+    getBed(bedId);
+
+    return occupationRepository
+        .findByBedIdAndEndedAtIsNull(bedId)
+        .orElseThrow(() ->
+            new FacilityNotFoundException(
+                "Active bed occupation not found"));
   }
 
   @Transactional
@@ -184,7 +284,7 @@ public class FacilityApplicationService {
     BedOccupation occupation =
         occupationRepository.findById(occupationId)
             .orElseThrow(() ->
-                new IllegalArgumentException(
+                new FacilityNotFoundException(
                     "Bed occupation not found"));
 
     occupation.close();
