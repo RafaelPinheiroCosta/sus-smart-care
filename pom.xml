@@ -13,6 +13,7 @@
     <module>services/identity-access-service</module><module>services/patient-registry-service</module><module>services/patient-journey-service</module>
     <module>services/triage-service</module><module>services/telemetry-service</module><module>services/queue-service</module><module>services/presence-service</module>
     <module>services/prehospital-service</module><module>services/notification-service</module>
+    <module>services/facility-service</module>
   </modules>
   <dependencyManagement><dependencies>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-dependencies</artifactId><version>${spring-boot.version}</version><type>pom</type><scope>import</scope></dependency>
