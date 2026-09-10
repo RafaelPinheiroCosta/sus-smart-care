@@ -16,12 +16,8 @@ public class PreHospitalApplicationService {
 
   private final PreHospitalRepository repo;
   private final EventOutbox outbox;
-
-  private final AmbulanceRepository
-      ambulanceRepository;
-
-  private final AmbulanceCoverageRepository
-      coverageRepository;
+  private final AmbulanceRepository ambulanceRepository;
+  private final AmbulanceCoverageRepository coverageRepository;
 
   public PreHospitalApplicationService(
       PreHospitalRepository repo,
@@ -31,10 +27,8 @@ public class PreHospitalApplicationService {
 
     this.repo = repo;
     this.outbox = outbox;
-    this.ambulanceRepository =
-        ambulanceRepository;
-    this.coverageRepository =
-        coverageRepository;
+    this.ambulanceRepository = ambulanceRepository;
+    this.coverageRepository = coverageRepository;
   }
 
   @Transactional
@@ -112,8 +106,8 @@ public class PreHospitalApplicationService {
 
     repo.save(encounter);
 
-    if ("HIGH".equals(risk) ||
-        "EMERGENCY".equals(risk)) {
+    if ("HIGH".equals(encounter.getRiskLevel()) ||
+        "EMERGENCY".equals(encounter.getRiskLevel())) {
 
       outbox.append(
           "pre-arrival-alert-created",
@@ -123,9 +117,61 @@ public class PreHospitalApplicationService {
               encounter.getPatientId(),
               encounter.getVisitId(),
               encounter.getDestinationFacilityId(),
-              risk,
+              encounter.getRiskLevel(),
               encounter.getEstimatedArrivalAt()));
     }
+
+    return encounter;
+  }
+
+  @Transactional
+  public PreHospitalEncounter arrive(
+      UUID id) {
+
+    PreHospitalEncounter encounter =
+        get(id);
+
+    encounter.markArrived();
+
+    repo.save(encounter);
+
+    outbox.append(
+        "pre-hospital-encounter-arrived",
+        id.toString(),
+        new EncounterArrived(
+            id,
+            encounter.getPatientId(),
+            encounter.getVisitId(),
+            encounter.getAmbulanceId(),
+            encounter.getDestinationFacilityId(),
+            encounter.getArrivedAt()));
+
+    return encounter;
+  }
+
+  @Transactional
+  public PreHospitalEncounter cancel(
+      UUID id,
+      String reason) {
+
+    PreHospitalEncounter encounter =
+        get(id);
+
+    encounter.cancel(reason);
+
+    repo.save(encounter);
+
+    outbox.append(
+        "pre-hospital-encounter-cancelled",
+        id.toString(),
+        new EncounterCancelled(
+            id,
+            encounter.getPatientId(),
+            encounter.getVisitId(),
+            encounter.getAmbulanceId(),
+            encounter.getDestinationFacilityId(),
+            encounter.getCancellationReason(),
+            encounter.getCancelledAt()));
 
     return encounter;
   }
@@ -193,5 +239,24 @@ public class PreHospitalApplicationService {
       UUID facilityId,
       String riskLevel,
       Instant eta) {
+  }
+
+  public record EncounterArrived(
+      UUID encounterId,
+      UUID patientId,
+      UUID visitId,
+      String ambulanceId,
+      UUID facilityId,
+      Instant arrivedAt) {
+  }
+
+  public record EncounterCancelled(
+      UUID encounterId,
+      UUID patientId,
+      UUID visitId,
+      String ambulanceId,
+      UUID facilityId,
+      String reason,
+      Instant cancelledAt) {
   }
 }

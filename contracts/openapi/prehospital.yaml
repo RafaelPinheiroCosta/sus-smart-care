@@ -1,16 +1,208 @@
 openapi: 3.0.3
+
 info:
-  title: Pre-Hospital API
-  version: 0.4.0
-  description: Ambulance/pre-arrival encounter, ETA and risk signal. Transport mode
-    never hard-codes clinical priority.
+  title: SUS Smart Care - Pre-Hospital API
+  version: 0.5.0
+  description: >
+    Ambulance fleet, operational coverage and pre-arrival encounter API.
+    Pre-hospital risk signals support preparation of the destination facility
+    but never replace authoritative clinical triage.
+
 servers:
-- url: http://localhost:8080
-  description: API Gateway
+  - url: http://localhost:8080
+    description: API Gateway
+  - url: http://localhost:8087
+    description: Direct service
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Ambulances
+  - name: Pre-Hospital Encounters
+
 paths:
+
+  /api/v1/pre-hospital/ambulances:
+    get:
+      tags: [Ambulances]
+      operationId: listAmbulances
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
+      responses:
+        '200':
+          description: Ambulances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ambulance'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+
+    post:
+      tags: [Ambulances]
+      operationId: createAmbulance
+      x-required-roles: [ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAmbulanceRequest'
+      responses:
+        '201':
+          description: Ambulance created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ambulance'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/pre-hospital/ambulances/{ambulanceId}:
+    get:
+      tags: [Ambulances]
+      operationId: getAmbulance
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/AmbulanceId'
+      responses:
+        '200':
+          description: Ambulance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ambulance'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/pre-hospital/ambulances/{ambulanceId}/operational-status:
+    patch:
+      tags: [Ambulances]
+      operationId: updateAmbulanceOperationalStatus
+      x-required-roles: [ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/AmbulanceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAmbulanceOperationalStatusRequest'
+      responses:
+        '200':
+          description: Ambulance updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ambulance'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/pre-hospital/ambulances/{ambulanceId}/coverages:
+    post:
+      tags: [Ambulances]
+      operationId: assignAmbulanceCoverage
+      x-required-roles: [ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/AmbulanceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignCoverageRequest'
+      responses:
+        '201':
+          description: Coverage created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmbulanceCoverage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/pre-hospital/ambulances/{ambulanceId}/coverage:
+    get:
+      tags: [Ambulances]
+      operationId: getActiveAmbulanceCoverage
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/AmbulanceId'
+      responses:
+        '200':
+          description: Active coverage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmbulanceCoverage'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/pre-hospital/ambulance-coverages/{coverageId}/end:
+    post:
+      tags: [Ambulances]
+      operationId: endAmbulanceCoverage
+      x-required-roles: [ADMIN]
+      parameters:
+        - name: coverageId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Coverage ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmbulanceCoverage'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
   /api/v1/pre-hospital/encounters:
     post:
+      tags: [Pre-Hospital Encounters]
       operationId: createPreHospitalEncounter
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
       requestBody:
         required: true
         content:
@@ -19,58 +211,50 @@ paths:
               $ref: '#/components/schemas/CreatePreHospitalRequest'
       responses:
         '201':
-          description: Created
+          description: Encounter created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreHospitalEncounter'
         '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
+          $ref: '#/components/responses/BadRequest'
         '401':
           description: Unauthenticated
         '403':
           description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
   /api/v1/pre-hospital/encounters/{id}:
     get:
+      tags: [Pre-Hospital Encounters]
       operationId: getPreHospitalEncounter
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - $ref: '#/components/parameters/EncounterId'
       responses:
         '200':
-          description: OK
+          description: Encounter
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreHospitalEncounter'
-        '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
         '401':
           description: Unauthenticated
         '403':
           description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /api/v1/pre-hospital/encounters/{id}/eta:
     put:
-      operationId: updateEta
+      tags: [Pre-Hospital Encounters]
+      operationId: updatePreHospitalEta
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - $ref: '#/components/parameters/EncounterId'
       requestBody:
         required: true
         content:
@@ -79,31 +263,29 @@ paths:
               $ref: '#/components/schemas/EtaRequest'
       responses:
         '200':
-          description: OK
+          description: ETA updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreHospitalEncounter'
         '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
+          $ref: '#/components/responses/BadRequest'
         '401':
           description: Unauthenticated
         '403':
           description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
   /api/v1/pre-hospital/encounters/{id}/risk:
     put:
+      tags: [Pre-Hospital Encounters]
       operationId: updatePreHospitalRisk
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - $ref: '#/components/parameters/EncounterId'
       requestBody:
         required: true
         content:
@@ -112,47 +294,253 @@ paths:
               $ref: '#/components/schemas/RiskRequest'
       responses:
         '200':
-          description: OK
+          description: Risk signal updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreHospitalEncounter'
         '400':
-          description: Invalid request
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetail'
+          $ref: '#/components/responses/BadRequest'
         '401':
           description: Unauthenticated
         '403':
           description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/pre-hospital/encounters/{id}/arrive:
+    post:
+      tags: [Pre-Hospital Encounters]
+      operationId: markPreHospitalEncounterArrived
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/EncounterId'
+      responses:
+        '200':
+          description: Encounter marked as arrived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreHospitalEncounter'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/pre-hospital/encounters/{id}/cancel:
+    post:
+      tags: [Pre-Hospital Encounters]
+      operationId: cancelPreHospitalEncounter
+      x-required-roles: [AMBULANCE_TEAM, TRIAGE_NURSE, DOCTOR, ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/EncounterId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelRequest'
+      responses:
+        '200':
+          description: Encounter cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreHospitalEncounter'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
 components:
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+
+    AmbulanceId:
+      name: ambulanceId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    EncounterId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+
+    BadRequest:
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    Conflict:
+      description: State conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
   schemas:
-    ProblemDetail:
+
+    AmbulanceOperationalStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - MAINTENANCE
+        - OUT_OF_SERVICE
+
+    PreHospitalEncounterStatus:
+      type: string
+      enum:
+        - EN_ROUTE
+        - ARRIVED
+        - CANCELLED
+
+    Ambulance:
       type: object
       properties:
-        type:
+        id:
           type: string
-          format: uri
-        title:
+        displayName:
           type: string
-        status:
-          type: integer
-        detail:
-          type: string
-        instance:
-          type: string
-        timestamp:
+        operationalStatus:
+          $ref: '#/components/schemas/AmbulanceOperationalStatus'
+        createdAt:
           type: string
           format: date-time
-        correlationId:
+        updatedAt:
           type: string
+          format: date-time
+
+    AmbulanceCoverage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ambulanceId:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateAmbulanceRequest:
+      type: object
+      required:
+        - id
+        - displayName
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+
+    UpdateAmbulanceOperationalStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/AmbulanceOperationalStatus'
+
+    AssignCoverageRequest:
+      type: object
+      required:
+        - facilityId
+      properties:
+        facilityId:
+          type: string
+          format: uuid
+
+    CreatePreHospitalRequest:
+      type: object
+      required:
+        - patientId
+        - ambulanceId
+        - destinationFacilityId
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        visitId:
+          type: string
+          format: uuid
+          nullable: true
+        ambulanceId:
+          type: string
+        destinationFacilityId:
+          type: string
+          format: uuid
+        estimatedArrivalAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    EtaRequest:
+      type: object
+      required:
+        - estimatedArrivalAt
+      properties:
+        estimatedArrivalAt:
+          type: string
+          format: date-time
+
+    RiskRequest:
+      type: object
+      required:
+        - riskLevel
+      properties:
+        riskLevel:
+          type: string
+
+    CancelRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+
     PreHospitalEncounter:
       type: object
       properties:
@@ -176,48 +564,41 @@ components:
           format: date-time
           nullable: true
         status:
-          type: string
+          $ref: '#/components/schemas/PreHospitalEncounterStatus'
         riskLevel:
           type: string
           nullable: true
         createdAt:
           type: string
           format: date-time
-    CreatePreHospitalRequest:
-      type: object
-      required:
-      - patientId
-      - ambulanceId
-      - destinationFacilityId
-      properties:
-        patientId:
-          type: string
-          format: uuid
-        visitId:
-          type: string
-          format: uuid
-        ambulanceId:
-          type: string
-        destinationFacilityId:
-          type: string
-          format: uuid
-        estimatedArrivalAt:
+        arrivedAt:
           type: string
           format: date-time
-    EtaRequest:
-      type: object
-      required:
-      - estimatedArrivalAt
-      properties:
-        estimatedArrivalAt:
+          nullable: true
+        cancelledAt:
           type: string
           format: date-time
-    RiskRequest:
-      type: object
-      required:
-      - riskLevel
-      properties:
-        riskLevel:
+          nullable: true
+        cancellationReason:
           type: string
-security:
-- bearerAuth: []
+          nullable: true
+
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
