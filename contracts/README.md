@@ -1,13 +1,18 @@
 # Contratos da plataforma
 
-- `openapi/`: contratos HTTP externos, versionados em `v1`.
-- `asyncapi/platform-events.yaml`: catálogo dos tópicos/eventos Kafka e envelope de integração.
+Esta pasta é a fonte documental autoritativa dos boundaries de integração.
 
-Na v0.4 os contratos são a **fonte documental autoritativa** e passam por validação estrutural no CI. A geração automática de interfaces/DTOs permanece propositalmente bloqueada até o primeiro `mvn verify` completo ficar verde, evitando introduzir código gerado não validado no baseline.
+- `openapi/`: contratos HTTP externos em `/api/v1/**`.
+- `asyncapi/platform-events.yaml`: eventos internos Kafka e envelope de integração.
+- `asyncapi/telemetry-mqtt.yaml`: contrato do boundary MQTT para dispositivos.
 
-Regras de evolução:
-1. alteração breaking exige nova versão de API/event schema;
-2. eventos carregam `schemaVersion`;
-3. campos novos devem ser opcionais quando possível;
-4. `correlationId` e `traceId` devem atravessar integrações;
-5. dados sensíveis não devem ser incluídos em eventos sem necessidade de negócio.
+Cada contrato possui sua própria versão de evolução; a versão declarada em `info.version` não precisa ser igual à versão do artefato Maven. Mudanças breaking exigem nova versão do contrato/API/event schema.
+
+Regras:
+
+1. eventos carregam `schemaVersion`;
+2. consumidores devem tolerar adição de campos opcionais quando possível;
+3. `correlationId` e `traceId` atravessam integrações relevantes;
+4. dados sensíveis só aparecem quando necessários ao negócio;
+5. MQTT de dispositivo não transporta `patientId`, `visitId`, CPF ou CNS;
+6. contratos passam por validação estrutural no CI.

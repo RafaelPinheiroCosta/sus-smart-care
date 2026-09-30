@@ -1,32 +1,32 @@
 flowchart LR
-  APP[App/PWA] --> GW[API Gateway]
-  TOTEM[Totem] --> GW
-  STAFF[Recepção/Staff] --> GW
-  AMB[Ambulância] --> GW
-  DEV[Medical Devices/Gateways] --> TEL[Telemetry Service]
+  PAT[Paciente / Responsável]
+  STAFF[Recepção / Profissional]
+  KIOSK[Totem / Telão]
+  AMB[Equipe de Ambulância]
+  DEV[Dispositivo / Gateway IoT]
+  KC[Keycloak]
+  MQTT[(MQTT Broker)]
 
-  GW --> PR[Patient Registry]
-  GW --> PJ[Patient Journey]
-  GW --> TRI[Triage]
-  GW --> Q[Queue]
-  GW --> PRES[Presence]
-  GW --> PRE[Pre-Hospital]
+  GW[API Gateway]
+  CORE[SUS Smart Care\n12 aplicações]
+  K[(Kafka)]
+  PG[(PostgreSQL)]
+  REDIS[(Redis)]
+  OBS[Prometheus / Tempo / Grafana]
 
-  PR --> PJ
-  PRE --> PR
-  PRE --> TEL
-  TEL --> K[(Kafka)]
-  K --> TRI
-  TRI --> K
-  K --> Q
-  PRES --> K
-  K --> NOTIF[Notification]
-  K --> PROJ[Projection Workers]
-  PROJ --> REDIS[(Redis)]
-  PROJ --> READ[(PostgreSQL Read Models)]
+  PAT --> GW
+  STAFF --> GW
+  KIOSK --> GW
+  AMB --> GW
+  GW --> CORE
+  GW --> KC
 
-  NOTIF --> PUSH[Push/SMS]
-  NOTIF --> DISPLAY[Telão/Chamada verbal]
+  DEV -->|MQTT QoS 1| MQTT
+  MQTT --> CORE
 
-  READ --> CLINICAL[ClinicalPatientView]
-  REDIS --> PATVIEW[PatientCurrentVisitView]
+  CORE <--> K
+  CORE --> PG
+  CORE --> REDIS
+  CORE --> OBS
+
+  CORE --> KIOSK

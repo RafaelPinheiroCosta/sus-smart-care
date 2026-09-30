@@ -1,19 +1,31 @@
 sequenceDiagram
-  participant A as Ambulância
+  actor A as Equipe de ambulância
+  participant G as API Gateway
   participant P as Patient Registry
   participant H as Pre-Hospital
   participant T as Telemetry
+  participant M as MQTT Broker
   participant K as Kafka
   participant C as Clinical Query
-  participant N as Notification
-  A->>P: identificar/criar Patient provisório
-  A->>H: criar PreHospitalEncounter + ETA
-  A->>T: abrir TelemetrySession
-  loop telemetria
-    A->>T: observação biométrica
-    T-->>K: BiometricObservationReceived
+  participant J as Patient Journey
+
+  A->>G: identificar/criar Patient
+  G->>P: Patient conhecido ou provisório
+  A->>G: iniciar encounter + ETA
+  G->>H: PreHospitalEncounter
+  A->>G: iniciar sessão / associar dispositivos
+  G->>T: TelemetrySession + DeviceAssignment
+
+  loop telemetria antes da chegada
+    A->>M: publish device telemetry
+    M->>T: MQTT QoS 1
+    T-->>K: aggregate/anomaly/observation events
     K-->>C: atualizar ClinicalPatientView
   end
-  A->>H: atualizar risco/ETA
-  H-->>K: PreArrivalAlertCreated
-  K-->>N: avisar equipe da unidade
+
+  A->>G: atualizar ETA/risco
+  G->>H: atualização pré-hospitalar
+  H-->>K: pre-arrival events
+  A->>G: registrar chegada
+  G->>H: ARRIVED
+  H-->>J: continuidade da jornada clínica

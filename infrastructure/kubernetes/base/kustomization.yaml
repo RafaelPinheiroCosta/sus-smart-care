@@ -4,6 +4,7 @@ namespace: sus-smart-care
 resources:
   - api-gateway.yaml
   - clinical-query-service.yaml
+  - facility-service.yaml
   - identity-access-service.yaml
   - namespace.yaml
   - notification-service.yaml

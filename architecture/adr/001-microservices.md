@@ -1,14 +1,15 @@
-# ADR — Microsserviços por capacidade de negócio
+# ADR-001 — Microsserviços por capacidade de negócio
 
-**Status:** Aceito para baseline v0.1
+**Status:** Aceito e evoluído
 
 ## Contexto
-O Tech Challenge exige um MVP demonstrável e o objetivo do projeto é consolidar os padrões aprendidos sem adicionar complexidade sem justificativa.
+A modelagem por Event Storming indicou capacidades com responsabilidades, ritmos de mudança e perfis de carga distintos. O monorepo facilita o trabalho de uma pessoa sem obrigar a aplicação a ser um monólito.
 
 ## Decisão
-Adotar 9 bounded contexts candidatos a microsserviços. Não dividir por entidade técnica; limites derivam de Event Storming e razão de mudança.
+Separar serviços por capacidade de negócio, e não por entidade técnica. A arquitetura atual possui 10 contextos de negócio: Facility, Identity & Access, Patient Registry, Patient Journey, Triage, Telemetry, Queue, Presence, Pre-Hospital e Notification. Clinical Query é o read side técnico de CQRS e o API Gateway é o edge da plataforma.
 
 ## Consequências
-- Benefícios devem ser demonstráveis no domínio e/ou operação.
-- A decisão pode ser revisada após métricas, testes de carga ou evolução do Event Storming.
-- Toda mudança breaking gera novo ADR ou revisão explícita.
+- cada serviço mantém responsabilidade e persistência próprias;
+- integrações síncronas são usadas somente quando a resposta imediata é necessária;
+- eventos reduzem acoplamento nos fluxos de propagação;
+- novos serviços só devem ser criados quando houver uma capacidade ou motivo de mudança realmente distinto.

@@ -1,5 +1,11 @@
 # ADR-013 — View Data clínica
 
-**Decisão:** médicos e demais perfis consomem projeções orientadas à tarefa, não agregações síncronas de diversos microsserviços a cada tela. Views planejadas: `ClinicalPatientView`, `TriageWorklistView`, `PatientCurrentVisitView`, `QueueDashboardView` e `PreArrivalEmergencyView`.
+**Status:** Aceito e parcialmente implementado
 
-**Motivo:** CQRS permite otimizar leitura independentemente da escrita e reduz acoplamento/latência no ponto de cuidado.
+## Decisão
+Perfis de leitura não fazem fan-out síncrono para vários microsserviços a cada tela. O `Clinical Query Service` mantém `ClinicalPatientView` como projeção CQRS persistente em PostgreSQL e cacheada em Redis.
+
+Outras views orientadas à tarefa podem ser extraídas quando houver necessidade real de produto/carga. A public view da fila permanece anonimizada.
+
+## Motivo
+Separar leitura de escrita reduz acoplamento e permite otimizar consultas sem transformar um serviço de domínio em agregador genérico.

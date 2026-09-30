@@ -1,14 +1,11 @@
-# ADR — Persistência poliglota por necessidade
+# ADR-005 — Persistência por necessidade
 
-**Status:** Aceito para baseline v0.1
-
-## Contexto
-O Tech Challenge exige um MVP demonstrável e o objetivo do projeto é consolidar os padrões aprendidos sem adicionar complexidade sem justificativa.
+**Status:** Aceito; refinado pelos ADR-016 e ADR-017
 
 ## Decisão
-PostgreSQL para transacional/projeções persistentes, Redis para leitura quente, EventStoreDB para streams selecionados.
+- PostgreSQL é a persistência transacional principal, inclusive para os streams Event Sourcing do MVP e para read models persistentes.
+- Redis é usado onde dados quentes/temporais reduzem latência ou volume de escrita, como Clinical Query e rolling telemetry.
+- EventStoreDB permanece uma possibilidade de adapter especializado, sem dependência no runtime atual.
 
 ## Consequências
-- Benefícios devem ser demonstráveis no domínio e/ou operação.
-- A decisão pode ser revisada após métricas, testes de carga ou evolução do Event Storming.
-- Toda mudança breaking gera novo ADR ou revisão explícita.
+A arquitetura evita introduzir uma tecnologia de persistência apenas por repertório; cada componente precisa justificar seu custo operacional.

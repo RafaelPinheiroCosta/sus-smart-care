@@ -1,22 +1,67 @@
-flowchart LR
-  APP[App/PWA futuro] --> GW[API Gateway]
-  KIOSK[Totem/Recepção] --> GW
-  AMB[Ambulância] --> GW
-  DEV[Dispositivos] --> GW
-  GW --> PR[Patient Registry]
-  GW --> PJ[Patient Journey]
-  GW --> TR[Triage]
-  GW --> Q[Queue]
-  GW --> TE[Telemetry]
-  GW --> PS[Presence]
-  GW --> PH[Pre-Hospital]
-  GW --> NO[Notification]
-  GW --> CQ[Clinical Query]
-  TE --> K[(Kafka)]
-  TR --> K
-  PS --> K
-  PH --> K
-  K --> CQ
-  K --> NO
-  K --> Q
-  CQ --> DOC[View Data Médico]
+flowchart TB
+  CHANNELS[App futuro / Responsável / Recepção / Totem / Ambulância]
+  DEV[Dispositivos e gateways]
+  GW[API Gateway :8080]
+  MQTT[(Mosquitto :1883)]
+
+  subgraph APPS[Aplicações]
+    FAC[Facility :8091]
+    PR[Patient Registry :8081]
+    PJ[Patient Journey :8082]
+    TR[Triage :8083]
+    Q[Queue :8084]
+    TE[Telemetry :8085]
+    PS[Presence :8086]
+    PH[Pre-Hospital :8087]
+    NO[Notification :8088]
+    IA[Identity Access :8089]
+    CQ[Clinical Query :8090]
+  end
+
+  CHANNELS --> GW
+  GW --> FAC
+  GW --> PR
+  GW --> PJ
+  GW --> TR
+  GW --> Q
+  GW --> TE
+  GW --> PS
+  GW --> PH
+  GW --> NO
+  GW --> IA
+  GW --> CQ
+
+  DEV --> MQTT --> TE
+
+  K[(Kafka)]
+  PG[(PostgreSQL)]
+  R[(Redis)]
+  KC[Keycloak]
+
+  PR <--> K
+  PJ <--> K
+  TR <--> K
+  Q <--> K
+  TE <--> K
+  PS <--> K
+  PH <--> K
+  NO <--> K
+  CQ <--> K
+
+  TE <--> R
+  CQ <--> R
+
+  FAC --> PG
+  PR --> PG
+  PJ --> PG
+  TR --> PG
+  Q --> PG
+  TE --> PG
+  PS --> PG
+  PH --> PG
+  NO --> PG
+  IA --> PG
+  CQ --> PG
+
+  GW --> KC
+  APPS --> KC

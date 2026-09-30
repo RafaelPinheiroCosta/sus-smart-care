@@ -1,15 +1,25 @@
 sequenceDiagram
-  participant R as Recepção/Totem
-  participant P as Patient Journey
+  actor R as Recepção / Totem
+  participant J as Patient Journey
+  participant K as Kafka
+  participant T as Triage
   participant Q as Queue
-  participant S as Presence
-  participant N as Notification/Telão
-  R->>P: check-in
-  R->>Q: paciente entra na fila após triagem
-  Q-->>N: situação/tempo para painel
-  R->>S: registrar saída temporária
-  S-->>Q: PatientPresenceChanged(LEFT)
-  Q->>Q: aplica retorno + tolerância
-  R->>S: registrar retorno
-  S-->>Q: PatientPresenceChanged(ENTERED)
-  Q->>Q: recalcula posição operacional
+  participant P as Presence
+  participant N as Notification / Telão
+
+  R->>J: criar/localizar visita e check-in
+  J-->>K: patient-checked-in
+  K-->>T: iniciar triagem
+  T-->>K: clinical-priority-confirmed
+  K-->>Q: criar entrada na fila
+  Q-->>N: public view / chamada anonimizada
+
+  R->>P: registrar saída temporária
+  P-->>K: patient-presence-changed
+  K-->>Q: aplicar return policy/readiness
+
+  R->>P: registrar retorno
+  P-->>K: patient-presence-changed
+  K-->>Q: recalcular estado operacional
+
+  Note over Q: prioridade clínica é preservada

@@ -1,192 +1,138 @@
-# SUS Smart Care - v0.4.1
+# SUS Smart Care
 
-Backend e arquitetura de uma plataforma inteligente para a jornada do paciente no SUS.
+Backend distribuído para acompanhamento da jornada do paciente no SUS, com foco em previsibilidade da espera, continuidade clínica, inclusão de pacientes sem smartphone, suporte ao fluxo pré-hospitalar e integração de telemetria.
 
-O projeto segue o principio digital-first, not digital-only: smartphone, pre-cadastro e automacoes reduzem atrito, mas nunca condicionam o direito ao atendimento nem definem prioridade clinica.
+O projeto foi modelado a partir de Event Storming e segue o princípio **digital-first, not digital-only**: recursos digitais reduzem atrito, mas não condicionam o atendimento e não alteram a prioridade clínica definida pelos profissionais de saúde.
 
-## Jornada coberta
+## O que está implementado
 
-1. consulta previa da unidade e estimativa de fila;
-2. paciente, responsavel, totem, recepcao ou ambulancia cria ou localiza o Patient canonico;
-3. pre-visita e pre-anamnese antes da chegada quando possivel;
+A solução final do MVP possui **12 aplicações Spring** no monorepo:
+
+| Aplicação | Porta | Responsabilidade principal |
+|---|---:|---|
+| API Gateway | 8080 | entrada única e roteamento |
+| Patient Registry | 8081 | identidade clínica canônica, identificadores e representação |
+| Patient Journey | 8082 | pré-visita, check-in e ciclo da visita |
+| Triage | 8083 | triagem, apoio de IA e confirmação profissional da prioridade |
+| Queue | 8084 | fila, posição estimada, chamada e política de retorno |
+| Telemetry | 8085 | dispositivos, MQTT, sessões e telemetria biométrica |
+| Presence | 8086 | presença, tracking e transição entre zonas |
+| Pre-Hospital | 8087 | ambulâncias, cobertura, ETA e atendimento pré-hospitalar |
+| Notification | 8088 | roteamento e histórico de comunicação |
+| Identity Access | 8089 | apoio à identidade/autorização integrada ao Keycloak |
+| Clinical Query | 8090 | read side CQRS e `ClinicalPatientView` |
+| Facility | 8091 | unidades, zonas de cuidado, leitos e ocupações |
+
+### Jornada suportada
+
+1. consulta prévia da unidade e da fila;
+2. criação ou localização do `Patient`, inclusive identidade provisória;
+3. pré-visita e pré-anamnese;
 4. check-in presencial;
-5. triagem e telemetria biometrica normalizada;
-6. regras e IA como apoio a decisao;
-7. decisao final de prioridade confirmada por profissional autenticado;
-8. entrada na fila segundo prioridade clinica;
-9. presenca, saida, retorno e tolerancia operacional;
-10. notificacoes adaptadas ao perfil de comunicacao;
-11. View Data consolidada para consumo clinico;
-12. fluxo pre-hospitalar com ambulancia, ETA e telemetria antes da chegada.
+5. triagem e ingestão de biometria;
+6. apoio de regras/IA, com decisão final humana;
+7. entrada e acompanhamento da fila clínica;
+8. saída temporária, retorno, tolerância e readiness operacional;
+9. chamada e atendimento em múltiplas etapas;
+10. alta, transferência ou cancelamento conforme o lifecycle da visita;
+11. visão clínica consolidada por CQRS;
+12. fluxo pré-hospitalar com ambulância, ETA e telemetria antes da chegada.
 
-## Bounded contexts
+## Decisões centrais
 
-A plataforma possui os seguintes contextos de negocio:
+- `Patient != UserAccount`: o histórico pertence ao paciente, não à conta nem ao representante.
+- Representação é temporal, revogável e auditável.
+- Smartphone, canal de entrada e pré-cadastro não concedem prioridade clínica.
+- Prioridade clínica e posição/readiness operacional são conceitos separados.
+- IA é apoio à decisão; falha do provider não bloqueia a triagem humana.
+- REST atende comandos/consultas síncronos; Kafka é o backbone de eventos internos.
+- MQTT é o boundary de ingestão de telemetria de dispositivos no MVP local.
+- Transactional Outbox, envelope versionado, idempotência e DLT reduzem inconsistências em falhas parciais.
+- Event Sourcing é seletivo em Journey e Triage; os streams do MVP são persistidos em PostgreSQL.
+- Clinical Query usa PostgreSQL como read model persistente e Redis como leitura quente.
 
-- Identity & Access
-- Patient Registry
-- Patient Journey
-- Triage
-- Telemetry & Device Integration
-- Queue Management
-- Presence
-- Pre-Hospital
-- Notification
+## Infraestrutura local
 
-O Clinical Query Service funciona como read side tecnico de CQRS e nao representa um novo dominio de negocio.
+A stack completa usa PostgreSQL, Kafka, Redis, Keycloak, Eclipse Mosquitto, Prometheus, Tempo e Grafana. EventStoreDB permanece no ambiente como componente de referência para evolução do adapter; o runtime atual não depende dele para reconstruir Journey/Triage.
 
-O Facility Service esta planejado para a proxima etapa evolutiva e ainda nao pertence a v0.4.1.
+### Subir somente a infraestrutura
 
-## Stack
-
-Java 21, Spring Boot 3, Spring Cloud Gateway, Spring Security OAuth2/OIDC/JWT, PostgreSQL, Flyway, Kafka, Redis, Event Sourcing seletivo, Resilience4j, OpenAPI, AsyncAPI, Micrometer, OpenTelemetry, Prometheus, Tempo, Grafana, Docker, JUnit, Testcontainers, ArchUnit, k6 e GitHub Actions.
-
-## Regras de dominio invariantes
-
-- Patient != UserAccount.
-- O historico clinico pertence ao paciente.
-- Responsavel, tutor ou familiar autorizado e vinculo temporal e revogavel.
-- Um paciente pode existir sem conta, documento confirmado ou smartphone.
-- Canal de entrada e pre-cadastro nao alteram prioridade clinica.
-- Saida ou atraso podem alterar readiness ou posicao operacional, mas nunca a prioridade clinica automaticamente.
-- Telemetria pre-hospitalar antecipa preparacao e avaliacao, mas nao substitui validacao profissional.
-- IA e apoio a decisao e falha de IA nao pode bloquear triagem humana.
-- A prioridade clinica final e uma decisao humana auditavel.
-- O identificador do profissional que confirma a prioridade vem do sub do JWT autenticado e nao do corpo enviado pelo cliente.
-
-## Ownership de dados
-
-A v0.4.1 explicita a responsabilidade de cada contexto:
-
-- Patient Registry: paciente canonico, identificadores, vinculos de representacao e perfil de comunicacao.
-- Identity & Access / Keycloak: usuarios, autenticacao, papeis e identidade do ator autenticado.
-- Patient Journey: ciclo da visita do paciente.
-- Triage: avaliacao e prioridade clinica.
-- Queue: ordenacao e estado da fila.
-- Presence: presenca fisica e eventos de localizacao.
-- Telemetry: dispositivos, sessoes e observacoes biometricas.
-- Pre-Hospital: atendimento pre-hospitalar.
-- Notification: entrega de notificacoes e projecao local das preferencias de comunicacao.
-- Clinical Query: visao consolidada para leitura.
-
-O perfil de comunicacao possui uma unica fonte de verdade no Patient Registry.
-
-O Notification recebe patient-communication-profile-updated por Kafka e mantem apenas uma projecao para decisao de canal.
-
-## Seguranca
-
-A plataforma combina dois niveis de autorizacao:
-
-1. coarse-grained authorization, baseada nas roles do JWT;
-2. fine-grained authorization, baseada no recurso e no vinculo do usuario com o paciente ou visita.
-
-Os principais fluxos protegidos incluem:
-
-- acesso a paciente por vinculo SELF ou representacao ativa;
-- leitura e alteracao de recursos de fila vinculados a visita;
-- eventos e historico de Presence vinculados a visita;
-- historico de Notification vinculado ao paciente;
-- alteracao do perfil de comunicacao somente por ator autorizado;
-- decisao clinica atribuida ao profissional autenticado pelo JWT.
-
-As visualizacoes publicas de fila permanecem anonimizadas e nao exigem acesso ao prontuario.
-
-## Executar infraestrutura
-
-Comando:
-
+```bash
 docker compose up -d
+```
 
-## Executar stack completa
+### Subir a stack completa
 
-Primeiro gere os JARs e entao execute no PowerShell:
+PowerShell:
 
+```powershell
 .\scripts\run-full-stack.ps1
+```
 
-Ou no Bash:
+Bash:
 
+```bash
 ./scripts/run-full-stack.sh
+```
 
-Principais acessos locais:
+Acessos principais:
 
-- API Gateway: http://localhost:8080
-- Keycloak: http://localhost:8180
-- Grafana: http://localhost:3000
+- Gateway: `http://localhost:8080`
+- Keycloak: `http://localhost:8180`
+- Grafana: `http://localhost:3000`
+- Prometheus: `http://localhost:9090`
 
-## Usuarios locais de demonstracao
+## Usuários de demonstração
 
-- demo.admin / admin123
-- demo.patient / demo123
-- demo.representative / demo123
-- demo.triage / demo123
-- demo.doctor / demo123
-- demo.operator / demo123
-- demo.ambulance / demo123
+- `demo.admin / admin123`
+- `demo.patient / demo123`
+- `demo.representative / demo123`
+- `demo.triage / demo123`
+- `demo.doctor / demo123`
+- `demo.operator / demo123`
+- `demo.ambulance / demo123`
 
-O client M2M device-client usa client_credentials e o secret device-secret somente no ambiente local de demonstracao.
+O client M2M `device-client` e as credenciais MQTT existentes no repositório são **somente para desenvolvimento local**.
 
-## E2E
+## Validação
 
-Com a stack completa em execucao, execute:
+Com a stack completa em execução, o cenário principal pode ser demonstrado com:
 
+```powershell
 .\scripts\e2e-demo.ps1
+```
 
-Tambem existem cenarios especificos para representacao e paciente sem smartphone.
+Também existem cenários específicos para ambulância, paciente sem smartphone, representação e segurança. Para validação estática/contratos:
 
-Os scripts utilizam polling quando dependem de projecoes e consistencia eventual.
+```powershell
+python scripts/static_validate.py
+python scripts/validate-structure.py
+python scripts/validate_contracts.py
+python scripts/release_validate.py
+```
 
-## Contratos
+E para o reactor Maven:
 
-- contracts/openapi/*.yaml: boundaries HTTP.
-- contracts/asyncapi/platform-events.yaml: catalogo de eventos Kafka.
-- contracts/README.md: politica de evolucao.
+```bash
+mvn -B -ntp verify
+```
 
-Na v0.4.1 os contratos foram realinhados com o runtime, incluindo:
+## Documentação
 
-- identidade do profissional derivada do JWT;
-- perfil de comunicacao no Patient Registry;
-- remocao da escrita direta de preferencias no Notification;
-- endpoint /identity/me;
-- eventos de atualizacao do perfil de comunicacao.
+A documentação principal foi consolidada para evitar versões concorrentes da mesma informação:
 
-## Seguranca clinica
+- [`docs/architecture.md`](docs/architecture.md): arquitetura, serviços, integração e decisões de implementação.
+- [`docs/security-and-data.md`](docs/security-and-data.md): identidade, autorização, privacidade e governança de dados.
+- [`docs/testing-and-operations.md`](docs/testing-and-operations.md): execução, observabilidade, testes e cenários E2E.
+- [`architecture/adr/`](architecture/adr/): decisões arquiteturais que explicam o porquê das escolhas.
+- [`contracts/`](contracts/): OpenAPI e AsyncAPI; fonte autoritativa dos contratos HTTP e de mensageria.
 
-AI_PROVIDER=demo nao representa um modelo medico validado.
+Diagramas Mermaid ficam em [`architecture/diagrams/`](architecture/diagrams/) e o registro visual do Event Storming em [`architecture/event-storming/`](architecture/event-storming/).
 
-Ele demonstra somente o boundary arquitetural para apoio a decisao. Uso clinico real exige protocolo institucional, validacao de modelo, governanca, auditoria e supervisao profissional.
+## Limites atuais
 
-## Estado da v0.4.1
-
-As etapas incrementais de estabilizacao 0.1 a 0.8 foram executadas e validadas localmente com Maven, Docker, Keycloak, PostgreSQL e Kafka.
-
-Entre as correcoes ja validadas estao:
-
-- CI alinhado a branch correta;
-- E2E de representacao atualizado;
-- BOLA/IDOR corrigido em Queue;
-- BOLA corrigido em Presence;
-- BOLA corrigido em Notification;
-- identidade profissional de Triage derivada do JWT;
-- ownership de comunicacao centralizado no Patient Registry;
-- projecao Registry -> Kafka -> Notification validada em runtime;
-- contratos OpenAPI/AsyncAPI alinhados;
-- semantica HTTP corrigida para 400, 403, 404 e 405 nos pontos ajustados.
-
-A regressao completa da v0.4.1 foi concluida com sucesso.
-
-A validacao final confirmou:
-
-- reactor Maven completo com os 12 modulos em SUCCESS;
-- 11 deployables respondendo HTTP 200 nos health checks;
-- todos os containers da stack sem restart inesperado;
-- E2E principal concluido;
-- E2E de representacao concluido;
-- E2E de paciente sem smartphone concluido;
-- Queue Service estabilizado apos registro correto de QueueAccessApplicationService como Spring Service.
-
-A v0.4.1 passa a ser a baseline estavel para a proxima evolucao funcional.
-
-Veja tambem:
-
-- architecture/implementation-status.md
-- docs/validation-v0.4.1.md
+- `AI_PROVIDER=demo` comprova o boundary de integração, mas não é um modelo clínico validado.
+- MQTT está implementado no ambiente local com Mosquitto; integração com hardware médico real exige credenciais, TLS/ACL e validação do fabricante/protocolo.
+- Presence já modela sinais `BLE`, `WIFI`, `UWB`, `QR`, `KIOSK`, `MANUAL` e `SYSTEM`, porém a descoberta automática de celulares/dispositivos por Wi-Fi ou Bluetooth ainda não faz parte do MVP.
+- Integrações reais com SAMU, prontuários externos e HL7/FHIR permanecem como evolução.
+- Kubernetes e Bicep são referências de implantação, não evidência de produção já operando em cloud.
