@@ -9,21 +9,57 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-function Check-Http([string]$Name,[string]$Url) {
-  try {
-    $r = Invoke-WebRequest -UseBasicParsing -Uri $Url -TimeoutSec 5
-    if ([int]$r.StatusCode -eq 200) {
-      Write-Host ("[OK]   {0,-18} {1}" -f $Name,$Url) -ForegroundColor Green
-      return $true
-    }
-    Write-Host ("[FAIL] {0,-18} HTTP {1}" -f $Name,$r.StatusCode) -ForegroundColor Red
-    return $false
-  } catch {
-    Write-Host ("[FAIL] {0,-18} {1}" -f $Name,$_.Exception.Message) -ForegroundColor Red
-    return $false
-  }
-}
+function Check-Http(
+  [string]$Name,
+  [string]$Url,
+  [int]$Attempts = 5,
+  [int]$DelaySeconds = 2
+) {
+  $lastError = $null
 
+  for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+
+    try {
+
+      $r = Invoke-WebRequest `
+        -UseBasicParsing `
+        -Uri $Url `
+        -TimeoutSec 5
+
+      if ([int]$r.StatusCode -eq 200) {
+
+        Write-Host (
+          "[OK]   {0,-18} {1}" -f $Name,$Url
+        ) -ForegroundColor Green
+
+        return $true
+      }
+
+      $lastError = "HTTP $($r.StatusCode)"
+    }
+    catch {
+
+      $lastError = $_.Exception.Message
+    }
+
+    if ($attempt -lt $Attempts) {
+
+      Write-Host (
+        "[WAIT] {0,-18} tentativa {1}/{2}; nova tentativa em {3}s" `
+          -f $Name,$attempt,$Attempts,$DelaySeconds
+      ) -ForegroundColor Yellow
+
+      Start-Sleep -Seconds $DelaySeconds
+    }
+  }
+
+  Write-Host (
+    "[FAIL] {0,-18} apos {1} tentativas: {2}" `
+      -f $Name,$Attempts,$lastError
+  ) -ForegroundColor Red
+
+  return $false
+}
 Write-Host ""
 Write-Host "=== SUS SMART CARE - PRE-FLIGHT DA DEMONSTRACAO ===" -ForegroundColor Cyan
 Write-Host ""
