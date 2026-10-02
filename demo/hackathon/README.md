@@ -65,22 +65,42 @@ Só inicie o ensaio quando o pre-flight terminar sem falhas.
 
 ---
 
-# Sequência de teste
+## Regressão automática completa
 
+Além da execução manual usada na gravação, a coleção pode ser executada integralmente pelo Collection Runner/Newman.
+
+Nesse modo:
+
+- o `PATIENT` é criado temporariamente no Keycloak;
+- as projeções assíncronas usam polling;
+- a telemetria da ambulância possui fallback HTTP automático;
+- ambulância e cobertura são criadas para o próprio ensaio;
+- o usuário temporário é removido ao final.
+
+A regressão completa validada executa as seis jornadas sem depender de estado clínico de uma execução anterior.
+
+---
+
+# Sequência de teste
 ## 00 — Autenticação e preparação
 
 Execute manualmente a pasta `00 - AUTENTICACAO E PREPARACAO` de cima para baixo.
 
 A request `00.0` cria um novo `demoRunId`, evitando colisões de códigos e identificadores entre ensaios.
 
-As requests seguintes obtêm os tokens e capturam o `sub` real dos usuários `REPRESENTATIVE` e `PATIENT`.
+Os usuários operacionais fixos são autenticados normalmente. Para o papel `PATIENT`, a própria coleção cria uma conta efêmera no Keycloak para cada execução, atribui a role `PATIENT`, captura o `sub` real e obtém o token dessa conta.
+
+Isso torna o cenário `PARENT -> SELF` repetível sem violar a regra de domínio que permite apenas um vínculo `SELF` ativo por conta.
 
 Resultado final esperado:
 
 - todos os logins `200`;
+- criação do PATIENT efêmero `201`;
+- atribuição da role `PATIENT` `204`;
 - unidade principal `201`;
-- `mainFacilityId` preenchido nas collection variables.
+- `mainFacilityId`, `patientUserId` e tokens preenchidos nas collection variables.
 
+A conta efêmera é removida automaticamente no final da pasta `05`.
 ---
 
 # 01 — Lucas criança: jornada completa
@@ -334,7 +354,22 @@ HIGH > Dona Rosa MEDIUM > LOW
 
 # 04 — Ambulância + MQTT + Redis
 
-Execute `04.01` a `04.08` manualmente.
+A preparação agora é autocontida: a coleção cria a unidade destino, cadastra uma ambulância operacional, atribui sua cobertura e só então abre o encounter pré-hospitalar.
+
+Para a demonstração manual, execute em ordem:
+
+```text
+04.01  Criar unidade destino
+04.01A Cadastrar ambulancia do ensaio
+04.01B Atribuir cobertura da ambulancia
+04.02  Patient provisorio
+04.03  PreVisit AMBULANCE
+04.04  Encounter pre-hospitalar
+04.05  Registrar monitor embarcado
+04.06  Posicionar na ambulancia
+04.07  Abrir sessao CONTINUOUS
+04.08  Associar monitor a sessao
+```
 
 Após `04.08`, copie das collection variables:
 
@@ -368,6 +403,8 @@ SPO2 = 85%
 
 No Terminal 1 devem aparecer ACKs `ACCEPTED`.
 
+> Durante a gravação com MQTT, não é necessário executar manualmente `04.08A` e `04.08B`. Essas requests existem como fallback automático para o Collection Runner/Newman: enviam dez amostras `HEART_RATE` e uma amostra `SPO2=85` via HTTP.
+
 ## Terminal 3 — Redis
 
 Enquanto ou logo após o robô estiver executando:
@@ -389,14 +426,18 @@ junto com `LLEN` e amostras recentes.
 Volte ao Postman e execute:
 
 ```text
-04.09 Agregados apos MQTT
-04.10 Anomalias apos MQTT
+04.09 Poll agregados apos telemetria
+04.10 Poll anomalias apos telemetria
 ```
+
+Essas requests possuem polling para respeitar a consistência eventual do processamento.
 
 Esperado:
 
 - agregado `HEART_RATE` com pelo menos 10 amostras;
 - anomalia `SPO2=85` persistida.
+
+Quando a coleção completa é executada pelo Runner/Newman, `04.08A` e `04.08B` produzem automaticamente os dados necessários.
 
 ## Idempotência MQTT
 
@@ -422,7 +463,7 @@ Continue:
 04.11 Risco pre-hospitalar HIGH
 04.12 MEDICO - Clinical View ANTES da chegada
 04.13 Marcar chegada encounter
-04.14 Check-in MESMA Visit
+04.14 Check-in MESMA Visit pelo OPERATOR
 04.15 Poll triagem mesma Visit
 ```
 
@@ -435,10 +476,14 @@ Ponto principal: o `ambulanceVisitId` é criado antes da chegada e continua send
 Execute:
 
 ```text
-05.01 Prometheus targets
-05.02 DOCTOR Clinical View -> 200
-05.03 PATIENT Clinical View -> 403
+05.01  Prometheus targets
+05.02  DOCTOR Clinical View -> 200
+05.03  PATIENT Clinical View -> 403
+05.03A Renovar KEYCLOAK ADMIN para cleanup
+05.04  CLEANUP - remover PATIENT efemero
 ```
+
+As duas últimas requests encerram o estado temporário criado para a regressão e permitem repetir a coleção sem reutilizar a identidade `SELF` da execução anterior.
 
 Para a gravação, abra também no navegador:
 
@@ -464,7 +509,7 @@ Comece sempre por:
 
 e execute novamente os logins e a criação das unidades/pacientes necessárias.
 
-Os códigos de demonstração incluem `demoRunId`, por isso um novo ensaio não deve colidir com o anterior.
+Os códigos de demonstração incluem `demoRunId`, e o usuário `PATIENT` usado no cenário `SELF` também é criado por execução e removido no final. Por isso a coleção completa pode ser executada repetidamente sem reutilizar IDs clínicos nem o vínculo `SELF` de um ensaio anterior.
 
 # Falhas esperadas do roteiro
 
