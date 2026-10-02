@@ -21,7 +21,7 @@ if (-not $SessionId) {
   throw "Informe -SessionId ou execute o robo MQTT com -SessionId."
 }
 
-$pattern = "telemetry:rolling:$SessionId:*"
+$pattern = "telemetry:rolling:${SessionId}:*"
 
 Write-Host ""
 Write-Host "=== REDIS - JANELA QUENTE DE TELEMETRIA ===" -ForegroundColor Cyan
