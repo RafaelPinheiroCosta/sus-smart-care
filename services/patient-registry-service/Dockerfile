@@ -3,4 +3,4 @@ WORKDIR /app
 COPY target/patient-registry-service-*.jar app.jar
 EXPOSE 8081
 USER 10001
-ENTRYPOINT ["java","-XX:MaxRAMPercentage=75","-jar","/app/app.jar"]
+ENTRYPOINT ["java","-XX:InitialRAMPercentage=10","-XX:MaxRAMPercentage=45","-XX:+ExitOnOutOfMemoryError","-jar","/app/app.jar"]
