@@ -1,0 +1,412 @@
+{
+    "id":  null,
+    "panels":  [
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "mappings":  [
+                                                                             {
+                                                                                 "options":  {
+                                                                                                 "0":  {
+                                                                                                           "color":  "red",
+                                                                                                           "text":  "DOWN"
+                                                                                                       },
+                                                                                                 "1":  {
+                                                                                                           "color":  "green",
+                                                                                                           "text":  "UP"
+                                                                                                       }
+                                                                                             },
+                                                                                 "type":  "value"
+                                                                             }
+                                                                         ],
+                                                            "thresholds":  {
+                                                                               "mode":  "absolute",
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "color":  "red",
+                                                                                                 "value":  null
+                                                                                             },
+                                                                                             {
+                                                                                                 "color":  "green",
+                                                                                                 "value":  1
+                                                                                             }
+                                                                                         ]
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  6,
+                                       "x":  0,
+                                       "y":  0
+                                   },
+                       "id":  1,
+                       "options":  {
+                                       "colorMode":  "background",
+                                       "graphMode":  "none",
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "expr":  "up{instance=\"$instance\"}",
+                                           "instant":  true,
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "Status",
+                       "type":  "stat"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "s"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  6,
+                                       "x":  6,
+                                       "y":  0
+                                   },
+                       "id":  2,
+                       "options":  {
+                                       "colorMode":  "value",
+                                       "graphMode":  "area",
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "expr":  "process_uptime_seconds{instance=\"$instance\"}",
+                                           "instant":  true,
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "Uptime",
+                       "type":  "stat"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "max":  1,
+                                                            "min":  0,
+                                                            "unit":  "percentunit"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  6,
+                                       "x":  12,
+                                       "y":  0
+                                   },
+                       "id":  3,
+                       "options":  {
+                                       "colorMode":  "value",
+                                       "graphMode":  "area",
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "expr":  "process_cpu_usage{instance=\"$instance\"}",
+                                           "instant":  true,
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "CPU",
+                       "type":  "stat"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "bytes"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  5,
+                                       "w":  6,
+                                       "x":  18,
+                                       "y":  0
+                                   },
+                       "id":  4,
+                       "options":  {
+                                       "colorMode":  "value",
+                                       "graphMode":  "area",
+                                       "reduceOptions":  {
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "values":  false
+                                                         }
+                                   },
+                       "targets":  [
+                                       {
+                                           "expr":  "sum(jvm_memory_used_bytes{instance=\"$instance\",area=\"heap\"})",
+                                           "instant":  true,
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "Heap JVM",
+                       "type":  "stat"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "reqps"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  9,
+                                       "w":  12,
+                                       "x":  0,
+                                       "y":  5
+                                   },
+                       "id":  5,
+                       "targets":  [
+                                       {
+                                           "expr":  "sum(rate(http_server_requests_seconds_count{instance=\"$instance\"}[1m]))",
+                                           "legendFormat":  "requests/s",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "Requests HTTP",
+                       "type":  "timeseries"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "decimals":  3,
+                                                            "unit":  "s"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  9,
+                                       "w":  12,
+                                       "x":  12,
+                                       "y":  5
+                                   },
+                       "id":  6,
+                       "targets":  [
+                                       {
+                                           "expr":  "sum(rate(http_server_requests_seconds_sum{instance=\"$instance\"}[5m])) / sum(rate(http_server_requests_seconds_count{instance=\"$instance\"}[5m]))",
+                                           "legendFormat":  "latencia media",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "Latencia HTTP",
+                       "type":  "timeseries"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "reqps"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  9,
+                                       "w":  12,
+                                       "x":  0,
+                                       "y":  14
+                                   },
+                       "id":  7,
+                       "targets":  [
+                                       {
+                                           "expr":  "sum by(status) (rate(http_server_requests_seconds_count{instance=\"$instance\"}[1m]))",
+                                           "legendFormat":  "HTTP {{status}}",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "Respostas por status HTTP",
+                       "type":  "timeseries"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "bytes"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  9,
+                                       "w":  12,
+                                       "x":  12,
+                                       "y":  14
+                                   },
+                       "id":  8,
+                       "targets":  [
+                                       {
+                                           "expr":  "sum(jvm_memory_used_bytes{instance=\"$instance\",area=\"heap\"})",
+                                           "legendFormat":  "Heap",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "Memoria JVM Heap",
+                       "type":  "timeseries"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "max":  1,
+                                                            "min":  0,
+                                                            "unit":  "percentunit"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  12,
+                                       "x":  0,
+                                       "y":  23
+                                   },
+                       "id":  9,
+                       "targets":  [
+                                       {
+                                           "expr":  "process_cpu_usage{instance=\"$instance\"}",
+                                           "legendFormat":  "CPU",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "CPU do microsservico",
+                       "type":  "timeseries"
+                   },
+                   {
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "reqps"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "gridPos":  {
+                                       "h":  8,
+                                       "w":  12,
+                                       "x":  12,
+                                       "y":  23
+                                   },
+                       "id":  10,
+                       "targets":  [
+                                       {
+                                           "expr":  "sum(rate(http_server_requests_seconds_count{instance=\"$instance\",status=~\"5..\"}[1m])) or vector(0)",
+                                           "legendFormat":  "5xx",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "title":  "Erros HTTP 5xx",
+                       "type":  "timeseries"
+                   }
+               ],
+    "refresh":  "5s",
+    "schemaVersion":  41,
+    "tags":  [
+                 "sus-smart-care",
+                 "hackathon",
+                 "microservice"
+             ],
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "datasource":  {
+                                                           "type":  "prometheus",
+                                                           "uid":  "prometheus"
+                                                       },
+                                        "includeAll":  false,
+                                        "label":  "Microsservico",
+                                        "multi":  false,
+                                        "name":  "instance",
+                                        "query":  {
+                                                      "query":  "label_values(up{job=\"sus-smart-care-services\"},instance)",
+                                                      "refId":  "StandardVariableQuery"
+                                                  },
+                                        "refresh":  1,
+                                        "type":  "query"
+                                    }
+                                ]
+                   },
+    "time":  {
+                 "from":  "now-15m",
+                 "to":  "now"
+             },
+    "timezone":  "browser",
+    "title":  "SUS Smart Care - Microsservico",
+    "uid":  "sus-smart-care-service",
+    "version":  1
+}

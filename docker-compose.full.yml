@@ -238,6 +238,8 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
     volumes:
       - ./observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./observability/grafana-dashboard-provider.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./observability/grafana-dashboards:/var/lib/grafana/dashboards:ro
 
   # ========================================================
   # MICROSSERVICOS
